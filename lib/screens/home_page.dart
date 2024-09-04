@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:spendwize_frontend/constants.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -32,6 +33,34 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> fetchBalances() async {
     await getWalletBalance();
+    await getSavingsBalance();
+  }
+
+  Future<void> getSavingsBalance() async {
+    String? token = await storage.read(key: 'token');
+
+    final response = await http.get(
+      Uri.parse(savingsBalanceEndpoint), // Replace with your actual savings balance API endpoint
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      print(data);
+      setState(() {
+        currentUSDSavings = double.tryParse(data['usd_balance'].toString()) ?? 0.0;
+        currentLBPSavings = double.tryParse(data['lbp_balance'].toString()) ?? 0.0;
+      });
+
+    } else {
+      print('Failed to retrieve savings balance: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load savings balances. Please try again.')),
+      );
+    }
   }
 
   Future<void> getWalletBalance() async {
@@ -223,11 +252,11 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(height: 10),
             Text(
-              'USD: \$${usdBalance.toStringAsFixed(2)}',
+              'USD: ${usdBalance.toStringAsFixed(2)} \$',
               style: TextStyle(fontSize: 18),
             ),
             Text(
-              'LBP: LBP ${lbpBalance.toStringAsFixed(0)}',
+              'LBP: ${NumberFormat('#,##0', 'en_US').format(lbpBalance)} LBP',
               style: TextStyle(fontSize: 18),
             ),
           ],
