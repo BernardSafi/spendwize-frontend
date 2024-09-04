@@ -3,7 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'register_screen.dart'; // Import the RegisterScreen
 import 'home_page.dart'; // Import your HomeScreen
-
+import 'dart:convert';
+import 'package:spendwize_frontend/constants.dart';
 class LoginScreen extends StatelessWidget {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -11,17 +12,18 @@ class LoginScreen extends StatelessWidget {
 
   Future<void> login(BuildContext context) async {
     final response = await http.post(
-      Uri.parse('https://your-api-url.com/login'),
+      Uri.parse(loginEndpoint),
       headers: {'Content-Type': 'application/json'},
       body: '{"email": "${emailController.text}", "password": "${passwordController.text}"}',
     );
 
     if (response.statusCode == 200) {
-      final token = response.body; // Adjust according to your response
-      await storage.write(key: 'token', value: token);
+      final jsonResponse = json.decode(response.body); // Decode the JSON response
+      final token = jsonResponse['token']; // Adjust according to your response structure
+      await storage.write(key: 'token', value: token); // Save the token
 
       // Navigate to the HomeScreen
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => HomePage()),
       );

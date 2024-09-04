@@ -1,10 +1,89 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:spendwize_frontend/constants.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-class HomePage extends StatelessWidget {
-  final double currentUSDBalance = 150.0; // Replace with actual USD balance
-  final double currentLBPBalance = 300000.0; // Replace with actual LBP balance
-  final double currentUSDSavings = 50.0; // Replace with actual USD savings balance
-  final double currentLBPSavings = 100000.0; // Replace with actual LBP savings balance
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+final storage = FlutterSecureStorage();
+
+Future<String?> getToken() async {
+  return await storage.read(key: 'token');
+}
+
+class _HomePageState extends State<HomePage> {
+  double currentUSDBalance = 0.0;
+  double currentLBPBalance = 0.0;
+  double currentUSDSavings = 0.0;
+  double currentLBPSavings = 0.0;
+  String userName = ''; // Variable to hold the user's name
+
+  @override
+  void initState() {
+    super.initState();
+    print('Fetching balances and user details...');
+    fetchBalances();
+    fetchUserName(); // Fetch the user's name on initialization
+  }
+
+  Future<void> fetchBalances() async {
+    await getWalletBalance();
+  }
+
+  Future<void> getWalletBalance() async {
+    String? token = await storage.read(key: 'token');
+
+
+    final response = await http.get(
+      Uri.parse(walletBalanceEndpoint),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        currentUSDBalance = double.tryParse(data['usd_balance'].toString()) ?? 0.0;
+        currentLBPBalance = double.tryParse(data['lbp_balance'].toString()) ?? 0.0;
+      });
+      print("Current USD Balance: ${data['usd_balance']}");
+    } else {
+      print('Failed to retrieve wallet balance: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load balances. Please try again.')),
+      );
+    }
+  }
+
+  Future<void> fetchUserName() async {
+    String? token = await storage.read(key: 'token');
+    final response = await http.get(
+      Uri.parse(usernameEndpoint), // Replace with your actual API URL
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      print('ok');
+      final data = jsonDecode(response.body);
+      setState(() {
+        userName = data['name']; // Set the user's name
+      });
+    } else {
+      print('Failed to retrieve user name: ${response.statusCode}');
+      print('Response body: ${response.body}');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load user name. Please try again.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +108,7 @@ class HomePage extends StatelessWidget {
                 AppBar(
                   title: Text(
                     'SpendWize',
-                    style: TextStyle(color: Colors.white), // Set the title text color to white
+                    style: TextStyle(color: Colors.white),
                   ),
                   backgroundColor: Colors.transparent,
                   elevation: 0,
@@ -37,7 +116,7 @@ class HomePage extends StatelessWidget {
                     IconButton(
                       icon: Icon(
                         Icons.account_circle,
-                        color: Colors.white, // Set the user icon color to white
+                        color: Colors.white,
                       ),
                       onPressed: () {
                         // Navigate to profile settings
@@ -56,7 +135,7 @@ class HomePage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
-                            'Welcome back, [User\'s Name]!',
+                            'Welcome back, ${userName.isNotEmpty ? userName : "User"}!',
                             style: TextStyle(
                               fontSize: isPortrait ? 24 : 28,
                               fontWeight: FontWeight.bold,
@@ -85,7 +164,7 @@ class HomePage extends StatelessWidget {
                             'Recent Transactions',
                             style: TextStyle(
                               fontSize: isPortrait ? 20 : 24,
-                              color: Colors.black, // Change text color to black
+                              color: Colors.black,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -104,20 +183,20 @@ class HomePage extends StatelessWidget {
             left: 0,
             right: 0,
             child: BottomNavigationBar(
-              backgroundColor: Colors.transparent, // Make BottomNavigationBar transparent
-              elevation: 0, // Remove shadow
-              selectedItemColor: Colors.white, // Set selected item text color to white
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              selectedItemColor: Colors.white,
               items: [
                 BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
                 BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Transactions'),
                 BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Reports'),
                 BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
               ],
-              currentIndex: 0, // Set the current index based on the selected tab
+              currentIndex: 0,
               onTap: (index) {
                 // Handle navigation based on the selected index
               },
-              type: BottomNavigationBarType.fixed, // Prevent shifting when changing tabs
+              type: BottomNavigationBarType.fixed,
             ),
           ),
         ],
@@ -201,21 +280,15 @@ class HomePage extends StatelessWidget {
       height: screenHeight * 0.25,
       padding: EdgeInsets.only(bottom: screenHeight * 0.10),
       child: ListView.builder(
-        itemCount: 5, // Replace with actual transaction count
+        itemCount: 5, // Example transaction count
         itemBuilder: (context, index) {
           return ListTile(
-            title: Text(
-              'Transaction ${index + 1}',
-              style: TextStyle(color: Colors.black), // Change text color to black
-            ),
-            subtitle: Text(
-              'Details of transaction ${index + 1}',
-              style: TextStyle(color: Colors.black), // Change text color to black
-            ),
-            trailing: Text(
-              '-\$[Amount]',
-              style: TextStyle(color: Colors.black), // Change text color to black
-            ), // Replace with actual amount
+            title: Text('Transaction ${index + 1}'),
+            subtitle: Text('Details about the transaction...'),
+            trailing: Text('\$${(index + 1) * 10}'), // Example amount
+            onTap: () {
+              // Handle transaction tap
+            },
           );
         },
       ),
