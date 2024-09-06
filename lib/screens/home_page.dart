@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:spendwize_frontend/constants.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
+import 'income_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -65,7 +66,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> getWalletBalance() async {
     String? token = await storage.read(key: 'token');
-
 
     final response = await http.get(
       Uri.parse(walletBalanceEndpoint),
@@ -135,6 +135,7 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               children: [
                 AppBar(
+                  automaticallyImplyLeading: false,
                   title: Text(
                     'SpendWize',
                     style: TextStyle(color: Colors.white),
@@ -187,18 +188,10 @@ class _HomePageState extends State<HomePage> {
                             screenWidth: screenWidth,
                           ),
                           SizedBox(height: 20),
-                          _buildActionButtons(),
-                          SizedBox(height: 40),
-                          Text(
-                            'Recent Transactions',
-                            style: TextStyle(
-                              fontSize: isPortrait ? 20 : 24,
-                              color: Colors.black,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
+                          _buildActionButtons(), // Updated to include icons
                           SizedBox(height: 20),
-                          _buildTransactionList(screenHeight: screenHeight),
+                          _buildAdditionalActionButtons(), // Updated to include icons
+                          SizedBox(height: 40),
                         ],
                       ),
                     ),
@@ -270,15 +263,19 @@ class _HomePageState extends State<HomePage> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         Expanded(
-          child: ElevatedButton(
+          child: ElevatedButton.icon(
             onPressed: () {
-              // Add income action
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AddIncomePage()),
+              );
             },
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 16),
               backgroundColor: Colors.white.withOpacity(0.85),
             ),
-            child: Text(
+            icon: Icon(Icons.add_circle, color: Colors.green),
+            label: Text(
               'Add Income',
               style: TextStyle(color: Colors.black),
             ),
@@ -286,7 +283,7 @@ class _HomePageState extends State<HomePage> {
         ),
         SizedBox(width: 20),
         Expanded(
-          child: ElevatedButton(
+          child: ElevatedButton.icon(
             onPressed: () {
               // Add expense action
             },
@@ -294,7 +291,8 @@ class _HomePageState extends State<HomePage> {
               padding: EdgeInsets.symmetric(vertical: 16),
               backgroundColor: Colors.white.withOpacity(0.85),
             ),
-            child: Text(
+            icon: Icon(Icons.remove_circle, color: Colors.red),
+            label: Text(
               'Add Expense',
               style: TextStyle(color: Colors.black),
             ),
@@ -304,23 +302,44 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTransactionList({required double screenHeight}) {
-    return Container(
-      height: screenHeight * 0.25,
-      padding: EdgeInsets.only(bottom: screenHeight * 0.10),
-      child: ListView.builder(
-        itemCount: 5, // Example transaction count
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text('Transaction ${index + 1}'),
-            subtitle: Text('Details about the transaction...'),
-            trailing: Text('\$${(index + 1) * 10}'), // Example amount
-            onTap: () {
-              // Handle transaction tap
+  Widget _buildAdditionalActionButtons() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () {
+              // Transfer action
             },
-          );
-        },
-      ),
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: Colors.white.withOpacity(0.85),
+            ),
+            icon: Icon(Icons.compare_arrows, color: Colors.blue),
+            label: Text(
+              'Transfer',
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
+        ),
+        SizedBox(width: 20),
+        Expanded(
+          child: ElevatedButton.icon(
+            onPressed: () {
+              // Exchange action
+            },
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              backgroundColor: Colors.white.withOpacity(0.85),
+            ),
+            icon: Icon(Icons.sync_alt, color: Colors.orange),
+            label: Text(
+              'Exchange',
+              style: TextStyle(color: Colors.black),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
