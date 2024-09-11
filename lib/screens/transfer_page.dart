@@ -5,7 +5,6 @@ import 'package:spendwize_frontend/constants.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
 
-
 class AddTransferPage extends StatefulWidget {
   @override
   _TransferPageState createState() => _TransferPageState();
@@ -25,6 +24,7 @@ class _TransferPageState extends State<AddTransferPage> {
   String userName = ''; // Variable to hold the user's name
 
   bool isTransferReversed = false; // Variable to track transfer direction
+  TextEditingController amountController = TextEditingController(); // Controller for the amount input
 
   @override
   void initState() {
@@ -32,6 +32,12 @@ class _TransferPageState extends State<AddTransferPage> {
     print('Fetching balances and user details...');
     fetchBalances();
     fetchUserName(); // Fetch the user's name on initialization
+  }
+
+  @override
+  void dispose() {
+    amountController.dispose(); // Dispose of the controller when the widget is removed
+    super.dispose();
   }
 
   Future<void> fetchBalances() async {
@@ -152,118 +158,126 @@ class _TransferPageState extends State<AddTransferPage> {
     // Check if the keyboard is open
     bool isKeyboardOpen = mediaQuery.viewInsets.bottom > 0;
 
-    return Scaffold(
-      resizeToAvoidBottomInset: true,
-      body: Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF003366), Color(0xFF008080), Color(0xFF87CEEB)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: Color(0xFF003366), // Cursor color
+          selectionColor: Colors.lightBlue.withOpacity(0.5), // Selection color
+          selectionHandleColor: Colors.blue, // Selection handles color
+        ),
+      ),
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        body: Stack(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFF003366), Color(0xFF008080), Color(0xFF87CEEB)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
-            ),
-            child: Column(
-              children: [
-                AppBar(
-                  automaticallyImplyLeading: false,
-                  title: Text(
-                    'SpendWize',
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  leading: IconButton(
-                    icon: Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                  actions: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.account_circle,
-                        color: Colors.white,
-                      ),
+              child: Column(
+                children: [
+                  AppBar(
+                    automaticallyImplyLeading: false,
+                    title: Text(
+                      'SpendWize',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    leading: IconButton(
+                      icon: Icon(Icons.arrow_back, color: Colors.white),
                       onPressed: () {
-                        // Navigate to profile settings
+                        Navigator.pop(context);
                       },
                     ),
-                  ],
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: isPortrait ? 16.0 : 32.0,
-                      vertical: 16.0,
-                    ),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text(
-                            'Welcome back, ${userName.isNotEmpty ? userName : "User"}!',
-                            style: TextStyle(
-                              fontSize: isPortrait ? 24 : 28,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                    actions: [
+                      IconButton(
+                        icon: Icon(
+                          Icons.account_circle,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          // Navigate to profile settings
+                        },
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: isPortrait ? 16.0 : 32.0,
+                        vertical: 16.0,
+                      ),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              'Welcome back, ${userName.isNotEmpty ? userName : "User"}!',
+                              style: TextStyle(
+                                fontSize: isPortrait ? 24 : 28,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 20),
-                          _buildBalanceCard(
-                            title: 'Current Balances',
-                            usdBalance: currentUSDBalance,
-                            lbpBalance: currentLBPBalance,
-                            screenWidth: screenWidth,
-                          ),
-                          SizedBox(height: 20),
-                          _buildBalanceCard(
-                            title: 'Current Savings',
-                            usdBalance: currentUSDSavings,
-                            lbpBalance: currentLBPSavings,
-                            screenWidth: screenWidth,
-                          ),
-                          SizedBox(height: 20),
-                          _buildTransferSection(), // Transfer section
-                          SizedBox(height: 40),
-                        ],
+                            SizedBox(height: 20),
+                            _buildBalanceCard(
+                              title: 'Current Balances',
+                              usdBalance: currentUSDBalance,
+                              lbpBalance: currentLBPBalance,
+                              screenWidth: screenWidth,
+                            ),
+                            SizedBox(height: 20),
+                            _buildBalanceCard(
+                              title: 'Current Savings',
+                              usdBalance: currentUSDSavings,
+                              lbpBalance: currentLBPSavings,
+                              screenWidth: screenWidth,
+                            ),
+                            SizedBox(height: 20),
+                            _buildTransferSection(), // Transfer section
+                            SizedBox(height: 40),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
-          if (!isKeyboardOpen) // Show bottom navigation bar only when the keyboard is closed
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: BottomNavigationBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                selectedItemColor: Colors.white,
-                unselectedItemColor: Colors.black,
-                items: const [
-                  BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-                  BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Transactions'),
-                  BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Reports'),
-                  BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
                 ],
-                currentIndex: 0,
-                onTap: (index) {
-                  // Handle navigation based on the selected index
-                },
-                type: BottomNavigationBarType.fixed,
               ),
             ),
-        ],
+            if (!isKeyboardOpen) // Show bottom navigation bar only when the keyboard is closed
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: BottomNavigationBar(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  selectedItemColor: Colors.white,
+                  unselectedItemColor: Colors.black,
+                  items: const [
+                    BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+                    BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Transactions'),
+                    BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Reports'),
+                    BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+                  ],
+                  currentIndex: 0,
+                  onTap: (index) {
+                    // Handle navigation based on the selected index
+                  },
+                  type: BottomNavigationBarType.fixed,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
-
 
   Widget _buildBalanceCard({
     required String title,
@@ -299,7 +313,6 @@ class _TransferPageState extends State<AddTransferPage> {
 
   Widget _buildTransferSection() {
     String selectedCurrency = 'USD'; // Default selected currency
-    TextEditingController amountController = TextEditingController(); // Controller for the amount input
 
     return Column(
       children: [
@@ -390,5 +403,4 @@ class _TransferPageState extends State<AddTransferPage> {
       ],
     );
   }
-
 }
