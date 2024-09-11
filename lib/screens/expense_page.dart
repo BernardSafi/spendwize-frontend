@@ -4,27 +4,27 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:spendwize_frontend/constants.dart'; // Your API endpoints/constants file
 
-class AddIncomePage extends StatefulWidget {
+class AddExpensePage extends StatefulWidget {
   @override
-  _AddIncomePageState createState() => _AddIncomePageState();
+  _AddExpensePageState createState() => _AddExpensePageState();
 }
 
-class _AddIncomePageState extends State<AddIncomePage> {
+class _AddExpensePageState extends State<AddExpensePage> {
   final storage = FlutterSecureStorage();
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   String _selectedCurrency = 'USD';
-  String _selectedIncomeType = 'Salary';
+  String _selectedExpenseType = 'Salary';
   bool _isLoading = false;
 
-  final List<String> incomeTypes = ['Salary', 'Bonus', 'Investment', 'Freelance', 'Other'];
+  final List<String> expenseTypes = ['Salary', 'Bonus', 'Investment', 'Freelance', 'Other'];
 
   Future<String?> getToken() async {
     return await storage.read(key: 'token');
   }
 
-  Future<void> addIncome() async {
+  Future<void> addExpense() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         _isLoading = true;
@@ -40,7 +40,7 @@ class _AddIncomePageState extends State<AddIncomePage> {
         body: jsonEncode({
           'amount': _amountController.text,
           'currency': _selectedCurrency,
-          'income_type': _selectedIncomeType,
+          'income_type': _selectedExpenseType,
           'description': _descriptionController.text,
         }),
       );
@@ -51,12 +51,12 @@ class _AddIncomePageState extends State<AddIncomePage> {
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Income added successfully!')),
+          SnackBar(content: Text('Expense added successfully!')),
         );
         Navigator.pop(context);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add income. Please try again.')),
+          SnackBar(content: Text('Failed to add expense. Please try again.')),
         );
       }
     }
@@ -169,8 +169,8 @@ class _AddIncomePageState extends State<AddIncomePage> {
                           ),
                           SizedBox(height: 20),
                           DropdownButtonFormField<String>(
-                            value: _selectedIncomeType,
-                            items: incomeTypes.map((type) {
+                            value: _selectedExpenseType,
+                            items: expenseTypes.map((type) {
                               return DropdownMenuItem<String>(
                                 value: type,
                                 child: Text(type),
@@ -178,11 +178,11 @@ class _AddIncomePageState extends State<AddIncomePage> {
                             }).toList(),
                             onChanged: (newValue) {
                               setState(() {
-                                _selectedIncomeType = newValue!;
+                                _selectedExpenseType = newValue!;
                               });
                             },
                             decoration: InputDecoration(
-                              labelText: 'Income Type',
+                              labelText: 'Expense Type',
                               labelStyle: TextStyle(color: Colors.white),
                               border: OutlineInputBorder(
                                 borderSide: BorderSide(color: Color(0xFF008080)),
@@ -219,11 +219,11 @@ class _AddIncomePageState extends State<AddIncomePage> {
                           ),
                           SizedBox(height: 40),
                           ElevatedButton(
-                            onPressed: _isLoading ? null : addIncome,
+                            onPressed: _isLoading ? null : addExpense,
                             child: _isLoading
                                 ? CircularProgressIndicator(color: Colors.white)
                                 : Text(
-                              'Add Income',
+                              'Add Expense',
                               style: TextStyle(color: Colors.black), // Set the text color to black
                             ),
                             style: ElevatedButton.styleFrom(

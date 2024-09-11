@@ -7,3 +7,5 @@ const String walletBalanceEndpoint="$baseUrl/wallet";
 const String savingsBalanceEndpoint = "$baseUrl/saving";
 const String usernameEndpoint="$baseUrl/user/name";
 const String addIncomeEndpoint="$baseUrl/test";
+const String walletToSavingsLBP="$baseUrl/test";
+const String savingsToWalletLBP="$baseUrl/test";

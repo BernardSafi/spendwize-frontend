@@ -4,13 +4,11 @@ import 'package:http/http.dart' as http;
 import 'package:spendwize_frontend/constants.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:intl/intl.dart';
-import 'income_page.dart';
-import 'expense_page.dart';
-import 'transfer_page.dart';
 
-class HomePage extends StatefulWidget {
+
+class AddTransferPage extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  _TransferPageState createState() => _TransferPageState();
 }
 
 final storage = FlutterSecureStorage();
@@ -19,12 +17,14 @@ Future<String?> getToken() async {
   return await storage.read(key: 'token');
 }
 
-class _HomePageState extends State<HomePage> {
+class _TransferPageState extends State<AddTransferPage> {
   double currentUSDBalance = 0.0;
   double currentLBPBalance = 0.0;
   double currentUSDSavings = 0.0;
   double currentLBPSavings = 0.0;
   String userName = ''; // Variable to hold the user's name
+
+  bool isTransferReversed = false; // Variable to track transfer direction
 
   @override
   void initState() {
@@ -116,14 +116,44 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> transferFunds() async {
+    String? token = await getToken();
+    final transferEndpoint = isTransferReversed ? walletToSavingsLBP : savingsToWalletLBP;
+
+    final response = await http.post(
+      Uri.parse(transferEndpoint), // Replace with your transfer API endpoint
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'amount': 100000, // Example amount, can be dynamic
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Transfer successful')),
+      );
+      fetchBalances(); // Update the balances after the transfer
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Transfer failed. Please try again.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final isPortrait = mediaQuery.orientation == Orientation.portrait;
-    final screenHeight = mediaQuery.size.height;
     final screenWidth = mediaQuery.size.width;
 
+    // Check if the keyboard is open
+    bool isKeyboardOpen = mediaQuery.viewInsets.bottom > 0;
+
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
           Container(
@@ -144,6 +174,12 @@ class _HomePageState extends State<HomePage> {
                   ),
                   backgroundColor: Colors.transparent,
                   elevation: 0,
+                  leading: IconButton(
+                    icon: Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                  ),
                   actions: [
                     IconButton(
                       icon: Icon(
@@ -190,9 +226,7 @@ class _HomePageState extends State<HomePage> {
                             screenWidth: screenWidth,
                           ),
                           SizedBox(height: 20),
-                          _buildActionButtons(), // Updated to include icons
-                          SizedBox(height: 20),
-                          _buildAdditionalActionButtons(), // Updated to include icons
+                          _buildTransferSection(), // Transfer section
                           SizedBox(height: 40),
                         ],
                       ),
@@ -202,32 +236,34 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: BottomNavigationBar(
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              selectedItemColor: Colors.white,
-              unselectedItemColor: Colors.black,
-              items: [
-                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-                BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Transactions'),
-                BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Reports'),
-                BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-              ],
-              currentIndex: 0,
-              onTap: (index) {
-                // Handle navigation based on the selected index
-              },
-              type: BottomNavigationBarType.fixed,
+          if (!isKeyboardOpen) // Show bottom navigation bar only when the keyboard is closed
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: BottomNavigationBar(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                selectedItemColor: Colors.white,
+                unselectedItemColor: Colors.black,
+                items: const [
+                  BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+                  BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Transactions'),
+                  BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Reports'),
+                  BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+                ],
+                currentIndex: 0,
+                onTap: (index) {
+                  // Handle navigation based on the selected index
+                },
+                type: BottomNavigationBarType.fixed,
+              ),
             ),
-          ),
         ],
       ),
     );
   }
+
 
   Widget _buildBalanceCard({
     required String title,
@@ -253,7 +289,7 @@ class _HomePageState extends State<HomePage> {
             ),
             Text(
               'LBP: ${NumberFormat('#,##0', 'en_US').format(lbpBalance)} LBP',
-              style: TextStyle(fontSize: 18),
+              style: const TextStyle(fontSize: 18),
             ),
           ],
         ),
@@ -261,94 +297,98 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
+  Widget _buildTransferSection() {
+    String selectedCurrency = 'USD'; // Default selected currency
+    TextEditingController amountController = TextEditingController(); // Controller for the amount input
+
+    return Column(
       children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AddIncomePage()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.white.withOpacity(0.85),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Expanded(
+              child: TextField(
+                controller: amountController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  hintText: 'Enter Amount',
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.85),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                ),
+                style: TextStyle(color: Colors.black),
+              ),
             ),
-            icon: Icon(Icons.add_circle, color: Colors.green),
-            label: Text(
-              'Add Income',
-              style: TextStyle(color: Colors.black),
+            SizedBox(width: 10),
+            Expanded(
+              child: DropdownButtonFormField<String>(
+                value: selectedCurrency,
+                items: [
+                  DropdownMenuItem(value: 'USD', child: Text('USD')),
+                  DropdownMenuItem(value: 'LBP', child: Text('LBP')),
+                ],
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.85),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                ),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedCurrency = newValue!;
+                  });
+                },
+                style: TextStyle(color: Colors.black),
+              ),
             ),
-          ),
+          ],
         ),
-        SizedBox(width: 20),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AddExpensePage()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.white.withOpacity(0.85),
+        SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                label: Text(
+                  isTransferReversed ? 'Transfer to Wallet' : 'Transfer to Savings',
+                  style: TextStyle(color: Colors.black), // Change text color to black
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white, // Keep button background white
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                ),
+                onPressed: () {
+                  if (amountController.text.isNotEmpty) {
+                    double transferAmount = double.parse(amountController.text);
+                    // Use the transferAmount and selectedCurrency for the transfer operation
+                    transferFunds();
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Please enter a valid amount.')),
+                    );
+                  }
+                },
+              ),
             ),
-            icon: Icon(Icons.remove_circle, color: Colors.red),
-            label: Text(
-              'Add Expense',
-              style: TextStyle(color: Colors.black),
+            IconButton(
+              icon: Icon(Icons.swap_horiz, size: 40, color: Colors.white),
+              onPressed: () {
+                setState(() {
+                  isTransferReversed = !isTransferReversed;
+                });
+              },
             ),
-          ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildAdditionalActionButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => AddTransferPage()),
-      );
-    },
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.white.withOpacity(0.85),
-            ),
-            icon: Icon(Icons.compare_arrows, color: Colors.blue),
-            label: Text(
-              'Transfer',
-              style: TextStyle(color: Colors.black),
-            ),
-          ),
-        ),
-        SizedBox(width: 20),
-        Expanded(
-          child: ElevatedButton.icon(
-            onPressed: () {
-              // Exchange action
-            },
-            style: ElevatedButton.styleFrom(
-              padding: EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Colors.white.withOpacity(0.85),
-            ),
-            icon: Icon(Icons.sync_alt, color: Colors.orange),
-            label: Text(
-              'Exchange',
-              style: TextStyle(color: Colors.black),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
