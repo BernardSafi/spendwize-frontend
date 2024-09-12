@@ -21,17 +21,62 @@ class _TransferPageState extends State<AddTransferPage> {
   double currentLBPBalance = 0.0;
   double currentUSDSavings = 0.0;
   double currentLBPSavings = 0.0;
-  String userName = ''; // Variable to hold the user's name
+  String selectedCurrency = 'USD';
+
 
   bool isTransferReversed = false; // Variable to track transfer direction
   TextEditingController amountController = TextEditingController(); // Controller for the amount input
+  Future<void> walletToSavingUsd(double amount) async {
+    String? token = await storage.read(key: 'token'); // Retrieve the token from secure storage
+    final response = await http.post(
+      Uri.parse(walletToSavingsUSD),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'amount': amount,
+        // Add any other required fields (e.g., user_id, description, etc.)
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Handle success
+      print('Transfer to saving USD successful: ${response.body}');
+    } else {
+      // Handle error
+      print('Failed to transfer to saving USD: ${response.body}');
+    }
+  }
+
+  Future<void> savingToWalletUsd(double amount) async {
+    String? token = await storage.read(key: 'token'); // Retrieve the token from secure storage
+    final response = await http.post(
+      Uri.parse(savingsToWalletUSD),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({
+        'amount': amount,
+        // Add any other required fields (e.g., user_id, description, etc.)
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      // Handle success
+      print('Transfer from saving USD successful: ${response.body}');
+    } else {
+      // Handle error
+      print('Failed to transfer from saving USD: ${response.body}');
+    }
+  }
+
 
   @override
-  void initState() {
-    super.initState();
-    print('Fetching balances and user details...');
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     fetchBalances();
-    fetchUserName(); // Fetch the user's name on initialization
   }
 
   @override
@@ -98,56 +143,87 @@ class _TransferPageState extends State<AddTransferPage> {
     }
   }
 
-  Future<void> fetchUserName() async {
-    String? token = await storage.read(key: 'token');
-    final response = await http.get(
-      Uri.parse(usernameEndpoint), // Replace with your actual API URL
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
 
-    if (response.statusCode == 200) {
-      print('ok');
-      final data = jsonDecode(response.body);
-      setState(() {
-        userName = data['name']; // Set the user's name
-      });
-    } else {
-      print('Failed to retrieve user name: ${response.statusCode}');
-      print('Response body: ${response.body}');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load user name. Please try again.')),
-      );
-    }
-  }
 
-  Future<void> transferFunds() async {
+  Future<void> transferFunds(String action, String currency) async {
     String? token = await getToken();
-    final transferEndpoint = isTransferReversed ? walletToSavingsLBP : savingsToWalletLBP;
+    print(action);
+    print(currency);
 
-    final response = await http.post(
-      Uri.parse(transferEndpoint), // Replace with your transfer API endpoint
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'amount': 100000, // Example amount, can be dynamic
-      }),
-    );
+    String? transferEndpoint;
 
-    if (response.statusCode == 200) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Transfer successful')),
-      );
-      fetchBalances(); // Update the balances after the transfer
+    // Determine the transfer endpoint based on the action and currency
+    if (action == 'Transfer to Savings' && currency == 'USD') {
+      transferEndpoint = walletToSavingsUSD; // Replace with your actual endpoint
+    } else if (action == 'Transfer to Wallet' && currency == 'USD') {
+      transferEndpoint = savingsToWalletUSD; // Replace with your actual endpoint
+    } else if (action == 'Transfer to Savings' && currency == 'LBP') {
+      transferEndpoint = walletToSavingsLBP; // Replace with your actual endpoint
+    } else if (action == 'Transfer to Wallet' && currency == 'LBP') {
+      transferEndpoint = savingsToWalletLBP; // Replace with your actual endpoint
     } else {
+      // Handle invalid action/currency combination
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Transfer failed. Please try again.')),
+        SnackBar(content: Text('Invalid transfer action or currency')),
+      );
+      return;
+    }
+
+    // Get the amount from the text field
+    String? amountText = amountController.text;
+    double? amount = double.tryParse(amountText); // Convert the text to a double
+
+    if (amount == null || amount <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter a valid amount')),
+      );
+      return;
+    }
+
+    print(transferEndpoint);
+    print(amount);
+
+    try {
+      final response = await http.post(
+        Uri.parse(transferEndpoint),
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'amount': amount, // Use the parsed amount
+        }),
+      );
+
+      print(response.statusCode);
+
+      if (response.statusCode == 201) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Transfer successful')),
+        );
+        fetchBalances(); // Update the balances after the transfer
+      } else {
+        String errorMessage = 'Transfer failed. Please try again.';
+        if (response.body.isNotEmpty) {
+          // Optionally extract a more specific error message
+          final Map<String, dynamic> errorResponse = jsonDecode(response.body);
+          if (errorResponse['message'] != null) {
+            errorMessage = errorResponse['message'];
+          }
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(errorMessage)),
+        );
+      }
+    } catch (e) {
+      // Handle any exceptions that may occur
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('An error occurred: $e')),
       );
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -216,15 +292,7 @@ class _TransferPageState extends State<AddTransferPage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            Text(
-                              'Welcome back, ${userName.isNotEmpty ? userName : "User"}!',
-                              style: TextStyle(
-                                fontSize: isPortrait ? 24 : 28,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
+
                             SizedBox(height: 20),
                             _buildBalanceCard(
                               title: 'Current Balances',
@@ -258,7 +326,7 @@ class _TransferPageState extends State<AddTransferPage> {
                 child: BottomNavigationBar(
                   backgroundColor: Colors.transparent,
                   elevation: 0,
-                  selectedItemColor: Colors.white,
+                  selectedItemColor: Colors.black,
                   unselectedItemColor: Colors.black,
                   items: const [
                     BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
@@ -312,7 +380,7 @@ class _TransferPageState extends State<AddTransferPage> {
   }
 
   Widget _buildTransferSection() {
-    String selectedCurrency = 'USD'; // Default selected currency
+
 
     return Column(
       children: [
@@ -378,15 +446,12 @@ class _TransferPageState extends State<AddTransferPage> {
                   padding: EdgeInsets.symmetric(vertical: 16),
                 ),
                 onPressed: () {
-                  if (amountController.text.isNotEmpty) {
-                    double transferAmount = double.parse(amountController.text);
-                    // Use the transferAmount and selectedCurrency for the transfer operation
-                    transferFunds();
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Please enter a valid amount.')),
-                    );
+                  String selectedAction = 'Transfer to Savings'; // or 'Transfer to Wallet'
+                  if(isTransferReversed){
+                    selectedAction='Transfer to Wallet';
                   }
+                  print(selectedAction);
+                  transferFunds(selectedAction, selectedCurrency);
                 },
               ),
             ),

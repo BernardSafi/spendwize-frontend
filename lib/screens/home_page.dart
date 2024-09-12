@@ -27,11 +27,10 @@ class _HomePageState extends State<HomePage> {
   String userName = ''; // Variable to hold the user's name
 
   @override
-  void initState() {
-    super.initState();
-    print('Fetching balances and user details...');
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     fetchBalances();
-    fetchUserName(); // Fetch the user's name on initialization
+    fetchUserName(); // Fetch the user's name every time the page is opened
   }
 
   Future<void> fetchBalances() async {
