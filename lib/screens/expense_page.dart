@@ -15,10 +15,10 @@ class _AddExpensePageState extends State<AddExpensePage> {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   String _selectedCurrency = 'USD';
-  String _selectedExpenseType = 'Salary';
+  String _selectedExpenseType = 'Groceries';
   bool _isLoading = false;
 
-  final List<String> expenseTypes = ['Salary', 'Bonus', 'Investment', 'Freelance', 'Other'];
+  final List<String> expenseTypes = ['Groceries', 'Rent', 'Bills', 'Transportation', 'Healthcare', 'Entertainment', 'Clothing', 'Education', 'Travel', 'Personal Care', 'Insurance', 'Other'];
 
   Future<String?> getToken() async {
     return await storage.read(key: 'token');
@@ -32,7 +32,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
 
       String? token = await getToken();
       final response = await http.post(
-        Uri.parse(addIncomeEndpoint),
+        Uri.parse(addExpenseEndpoint),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -40,16 +40,16 @@ class _AddExpensePageState extends State<AddExpensePage> {
         body: jsonEncode({
           'amount': _amountController.text,
           'currency': _selectedCurrency,
-          'income_type': _selectedExpenseType,
+          'expense_type': _selectedExpenseType,
           'description': _descriptionController.text,
         }),
       );
-
+print(response.statusCode);
+print(response.body);
       setState(() {
         _isLoading = false;
       });
-
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Expense added successfully!')),
         );
@@ -118,27 +118,20 @@ class _AddExpensePageState extends State<AddExpensePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          TextFormField(
+                          TextField(
                             controller: _amountController,
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
-                              labelText: 'Amount',
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Color(0xFF008080)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Color(0xFF003366)),
-                              ),
-                              labelStyle: TextStyle(color: Colors.white),
+                              hintText: 'Enter Amount',
                               filled: true,
-                              fillColor: Colors.white.withOpacity(0.8),
+                              fillColor: Colors.white.withOpacity(0.85),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter an amount';
-                              }
-                              return null;
-                            },
+                            style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(height: 20),
                           DropdownButtonFormField<String>(
@@ -155,17 +148,16 @@ class _AddExpensePageState extends State<AddExpensePage> {
                               });
                             },
                             decoration: InputDecoration(
-                              labelText: 'Currency',
-                              labelStyle: TextStyle(color: Colors.white),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Color(0xFF008080)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Color(0xFF003366)),
-                              ),
+                              hintText: 'Currency',
                               filled: true,
-                              fillColor: Colors.white.withOpacity(0.8),
+                              fillColor: Colors.white.withOpacity(0.85),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                             ),
+                            style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(height: 20),
                           DropdownButtonFormField<String>(
@@ -182,40 +174,32 @@ class _AddExpensePageState extends State<AddExpensePage> {
                               });
                             },
                             decoration: InputDecoration(
-                              labelText: 'Expense Type',
-                              labelStyle: TextStyle(color: Colors.white),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Color(0xFF008080)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Color(0xFF003366)),
-                              ),
+                              hintText: 'Expense Type',
                               filled: true,
-                              fillColor: Colors.white.withOpacity(0.8),
+                              fillColor: Colors.white.withOpacity(0.85),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                             ),
+                            style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(height: 20),
-                          TextFormField(
+                          TextField(
                             controller: _descriptionController,
                             maxLines: 3,
                             decoration: InputDecoration(
-                              labelText: 'Description',
-                              labelStyle: TextStyle(color: Colors.white),
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(color: Color(0xFF008080)),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: Color(0xFF003366)),
-                              ),
+                              hintText: 'Enter Description',
                               filled: true,
-                              fillColor: Colors.white.withOpacity(0.8),
+                              fillColor: Colors.white.withOpacity(0.85),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please enter a description';
-                              }
-                              return null;
-                            },
+                            style: TextStyle(color: Colors.black),
                           ),
                           SizedBox(height: 40),
                           ElevatedButton(
