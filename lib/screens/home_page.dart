@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import 'income_page.dart';
 import 'expense_page.dart';
 import 'transfer_page.dart';
+import 'exchange_page.dart';
+import 'transaction_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -218,7 +220,19 @@ class _HomePageState extends State<HomePage> {
               ],
               currentIndex: 0,
               onTap: (index) {
-                // Handle navigation based on the selected index
+                if (index == 0) {
+                  // Navigate to Home (you can keep it as is or remove if already on Home)
+                } else if (index == 1) {
+                  // Navigate to Transactions
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => TransactionPage()),
+                  );
+                } else if (index == 2) {
+                  // Navigate to Reports (implement your logic here)
+                } else if (index == 3) {
+                  // Navigate to Settings (implement your logic here)
+                }
               },
               type: BottomNavigationBarType.fixed,
             ),
@@ -334,7 +348,10 @@ class _HomePageState extends State<HomePage> {
         Expanded(
           child: ElevatedButton.icon(
             onPressed: () {
-              // Exchange action
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => ExchangePage()),
+              );
             },
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 16),
