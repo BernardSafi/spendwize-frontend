@@ -280,12 +280,16 @@ class _HomePageState extends State<HomePage> {
       children: [
         Expanded(
           child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AddIncomePage()),
-              );
-            },
+            onPressed: () async {
+          // Navigate to AddExpensePage and wait for it to return
+          await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AddIncomePage()),
+          );
+
+          // Reload balances after adding an expense
+          fetchBalances();
+          },
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 16),
               backgroundColor: Colors.white.withOpacity(0.85),
@@ -300,11 +304,15 @@ class _HomePageState extends State<HomePage> {
         SizedBox(width: 20),
         Expanded(
           child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              // Navigate to AddExpensePage and wait for it to return
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => AddExpensePage()),
               );
+
+              // Reload balances after adding an expense
+              fetchBalances();
             },
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 16),
@@ -327,12 +335,16 @@ class _HomePageState extends State<HomePage> {
       children: [
         Expanded(
           child: ElevatedButton.icon(
-            onPressed: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => AddTransferPage()),
-      );
-    },
+            onPressed: () async {
+              // Navigate to AddExpensePage and wait for it to return
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AddTransferPage()),
+              );
+
+              // Reload balances after adding an expense
+              fetchBalances();
+            },
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 16),
               backgroundColor: Colors.white.withOpacity(0.85),
@@ -347,11 +359,15 @@ class _HomePageState extends State<HomePage> {
         SizedBox(width: 20),
         Expanded(
           child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              // Navigate to AddExpensePage and wait for it to return
+              await Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => ExchangePage()),
               );
+
+              // Reload balances after adding an expense
+              fetchBalances();
             },
             style: ElevatedButton.styleFrom(
               padding: EdgeInsets.symmetric(vertical: 16),

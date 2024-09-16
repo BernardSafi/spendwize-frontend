@@ -12,6 +12,7 @@ const String walletToSavingsUSD="$baseUrl/transfer/wallet-to-saving-usd";
 const String savingsToWalletUSD="$baseUrl/transfer/saving-to-wallet-usd";
 const String savingsToWalletLBP="$baseUrl/transfer/saving-to-wallet-lbp";
 const String walletToSavingsLBP="$baseUrl/transfer/wallet-to-saving-lbp";
+const String transactionEndpoint="$baseUrl/transactions";
 const String currencyExchangeEndpoint="$baseUrl";
 
 
