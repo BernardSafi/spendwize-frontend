@@ -86,10 +86,22 @@ class _ExchangePageState extends State<ExchangePage> {
       return;
     }
 
-    // Calculate the exchanged amount
-    double exchangedAmount = selectedCurrencyTo == 'LBP' ? amount * exchangeRate : amount / exchangeRate;
+    String fromAccount;
+    String toAccount;
+
+    // Determine from_account and to_account based on selectedCurrencyTo
+    if (selectedCurrencyTo == 'LBP') {
+      fromAccount = 'wallet_usd';
+      toAccount = 'wallet_lbp';
+    } else {
+      fromAccount = 'wallet_lbp';
+      toAccount = 'wallet_usd';
+    }
+    print(fromAccount);
+    print(toAccount);
 
     try {
+      print(currencyExchangeEndpoint);
       // Perform the API request
       final response = await http.post(
         Uri.parse(currencyExchangeEndpoint), // Replace with your actual exchange endpoint
@@ -98,22 +110,23 @@ class _ExchangePageState extends State<ExchangePage> {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'amount': exchangedAmount,
-          'currency_from': 'USD',
-          'currency_to': selectedCurrencyTo,
+          'from_account': fromAccount,
+          'to_account': toAccount,
+          'amount': amount, // Send the original amount
+          'exchange_rate': exchangeRate, // Send exchange rate
         }),
       );
 
       setState(() {
         _isLoading = false;
       });
-
-      if (response.statusCode == 200) {
+      print(response.statusCode);
+      if (response.statusCode == 201) {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Exchange successful')),
         );
-        fetchBalances(); // Update balances
+        fetchBalances(); // Update balances after exchange
       } else {
         // Show failure message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -130,6 +143,7 @@ class _ExchangePageState extends State<ExchangePage> {
       );
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
