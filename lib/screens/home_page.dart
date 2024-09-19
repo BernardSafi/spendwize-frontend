@@ -219,15 +219,18 @@ class _HomePageState extends State<HomePage> {
                 BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
               ],
               currentIndex: 0,
-              onTap: (index) {
+              onTap: (index) async {
                 if (index == 0) {
-                  // Navigate to Home (you can keep it as is or remove if already on Home)
+                  // Stay on Home (you can keep it as is or remove if already on Home)
                 } else if (index == 1) {
-                  // Navigate to Transactions
-                  Navigator.push(
+                  // Navigate to Transactions and wait for the result
+                  await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => TransactionPage()),
                   );
+
+                  // Fetch the balances again after returning from the TransactionPage
+                  await fetchBalances();
                 } else if (index == 2) {
                   // Navigate to Reports (implement your logic here)
                 } else if (index == 3) {

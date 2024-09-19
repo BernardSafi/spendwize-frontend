@@ -5,6 +5,7 @@ import 'income_page.dart';
 import 'expense_page.dart';
 import 'transfer_page.dart';
 import 'exchange_page.dart';
+import 'transaction_detail_page.dart';
 import 'package:spendwize_frontend/constants.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -46,6 +47,10 @@ class _TransactionPageState extends State<TransactionPage> {
               .map((transactionJson) => Transaction.fromJson(transactionJson))
               .toList();
           originalTransactions = List.from(transactions); // Store original transactions
+
+          // Initially load all transactions without filtering
+          filterCurrency = 'All'; // Ensure all currencies are shown by default
+          filterType = 'all'; // Ensure all transaction types are shown by default
           applyFilters(); // Apply filters once transactions are fetched
         });
       } else {
@@ -56,6 +61,7 @@ class _TransactionPageState extends State<TransactionPage> {
       print('Error fetching transactions: $e');
     }
   }
+
 
   void applyFilters() {
     // Start with the original transactions
@@ -71,45 +77,99 @@ class _TransactionPageState extends State<TransactionPage> {
           .toList();
       print("Filtered by currency '${filterCurrency}', count: ${filteredTransactions.length}");
     } else {
-      filteredTransactions = filteredTransactions
-          .where((transaction) => transaction.currency == "USD"||transaction.currency == "LBP")
-          .toList();
-      print("Currency filter is 'All', count remains: ${filteredTransactions.length}");
+      // If 'All' is selected, show both 'USD' and 'LBP' transactions (no filtering)
+      print("Currency filter is 'All', no currency filtering applied.");
     }
 
-    // Filter by transaction type; if it's 'All', include all types
+    // Filter by transaction type, but only if it's not 'All'
     if (filterType != 'all') {
       filteredTransactions = filteredTransactions
-          .where((transaction) => transaction.type == filterType.toLowerCase())
+          .where((transaction) => transaction.type.toLowerCase() == filterType.toLowerCase())
           .toList();
       print("Filtered by type '${filterType}', count: ${filteredTransactions.length}");
     } else {
-      // If filterType is 'All', include all types explicitly
-      filteredTransactions = filteredTransactions
-          .where((transaction) =>
-      transaction.type == "income" ||
-          transaction.type == "expense" ||
-          transaction.type == "transfer" ||
-          transaction.type == "exchange")
-          .toList();
-      print("Type filter is 'All', all types included, count: ${filteredTransactions.length}");
+      // If 'All' is selected, no filtering by type
+      print("Type filter is 'All', no type filtering applied.");
     }
 
-    // Filter by date range
+    // Filter by date range, if selected
     if (selectedDateRange != null) {
       filteredTransactions = filteredTransactions
           .where((transaction) =>
-      transaction.date.isAfter(selectedDateRange!.start) &&
-          transaction.date.isBefore(selectedDateRange!.end))
+      transaction.date.isAfter(selectedDateRange!.start) || transaction.date.isAtSameMomentAs(selectedDateRange!.start) &&
+          (transaction.date.isBefore(selectedDateRange!.end.add(Duration(days: 1))) ||
+              transaction.date.isAtSameMomentAs(selectedDateRange!.end)))
           .toList();
+
       print("Filtered by date range, count: ${filteredTransactions.length}");
     }
 
     // Update the displayed transactions
     setState(() {
-      transactions = filteredTransactions; // Use original if empty
+      transactions = filteredTransactions; // Display filtered or all if no filtering
       print("Final transaction count for display: ${transactions.length}");
     });
+  }
+
+
+  Future<void> _deleteTransaction(Transaction transaction) async {
+    String? token = await storage.read(key: 'token');
+
+    // Show a confirmation dialog before deleting
+    bool? confirmDelete = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('Delete Transaction'),
+          content: Text('Are you sure you want to delete this transaction?'),
+          actions: [
+            TextButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+            ),
+            TextButton(
+              child: Text('Delete'),
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    // Proceed only if the user confirmed the deletion
+    if (confirmDelete == true) {
+      try {
+
+        final response = await http.delete(
+          Uri.parse('$transactionEndpoint/${transaction.id}'), // Append the transaction ID
+
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        );
+print(response.statusCode);
+        if (response.statusCode == 200) {
+          setState(() {
+            transactions.remove(transaction); // Remove the transaction locally
+          });
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Transaction deleted successfully.'),
+          ));
+        } else {
+          print('Failed to delete transaction');
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Failed to delete transaction.'),
+          ));
+        }
+      } catch (e) {
+        print('Error deleting transaction: $e');
+      }
+    }
   }
 
 
@@ -287,25 +347,49 @@ class _TransactionPageState extends State<TransactionPage> {
           Transaction transaction = transactions[index];
           return ListTile(
             leading: Icon(
-              _getIconForTransaction(transaction.type)['icon'],  // Use icon from the map
-              color: _getIconForTransaction(transaction.type)['color'],  // Use color from the map
+              _getIconForTransaction(transaction.type)['icon'],
+              color: _getIconForTransaction(transaction.type)['color'],
             ),
             title: Text(transaction.description),
             subtitle: Text(_getFormattedDate(transaction.date)),
-            trailing: Text(
-              '${transaction.amount} ${transaction.currency}',
-              style: TextStyle(
-                color: transaction.type == 'income' ? Colors.green : Colors.red,
-              ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${transaction.amount} ${transaction.currency}',
+                  style: TextStyle(
+                    color: transaction.type == 'income' ? Colors.green : Colors.red,
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.edit, color: Colors.blue),
+                  onPressed: () {
+                    // Implement your edit transaction logic here
+                  },
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete, color: Colors.red),
+                  onPressed: () {
+                    _deleteTransaction(transaction);
+                  },
+                ),
+              ],
             ),
             onTap: () {
-              // Show transaction details
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => TransactionDetailPage(transaction: transaction),
+                ),
+              );
             },
           );
         },
       ),
     );
   }
+
+
 
   Map<String, dynamic> _getIconForTransaction(String type) {
     switch (type) {
@@ -452,29 +536,46 @@ class _TransactionPageState extends State<TransactionPage> {
 }
 
 class Transaction {
+  final String id; // Add the id field
   final String type;
   final String description;
   final double amount;
   final String currency;
   final DateTime date;
+  final String? subtype; // For income and expense
+  final String? fromAccount; // For transfers
+  final String? toAccount; // For transfers
+  final double? exchangeRate; // For exchanges
 
   Transaction({
+    required this.id, // Include id in the constructor
     required this.type,
     required this.description,
     required this.amount,
     required this.currency,
     required this.date,
+    this.subtype,
+    this.fromAccount,
+    this.toAccount,
+    this.exchangeRate,
   });
 
   factory Transaction.fromJson(Map<String, dynamic> json) {
     return Transaction(
+      id: json['id'].toString(),
       type: json['type'] ?? 'unknown',
       description: json['description'] ?? 'No description',
-      date: DateTime.tryParse(json['date'] ?? '') ?? DateTime.now(),
+      date: DateTime.parse(json['date']),
       amount: (json['amount'] is String)
           ? double.tryParse(json['amount']) ?? 0.0 // Convert string to double
           : (json['amount'] as num?)?.toDouble() ?? 0.0, // Handle num type
-      currency: json['currency'] ?? 'USD',
+      currency: json['currency'] ,
+      subtype: json['subtype'] ?? 'no type',
+      fromAccount: json['from_account'] ?? 'no account',
+      toAccount: json['to_account'] ?? 'no account',
+      exchangeRate: json['exchange_rate'] != null
+          ? double.tryParse(json['exchange_rate'].toString()) // Ensure it's not null before parsing
+          : null, // Handle null case appropriately
     );
   }
 }
