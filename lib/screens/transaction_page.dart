@@ -156,6 +156,7 @@ print(response.statusCode);
         if (response.statusCode == 200) {
           setState(() {
             transactions.remove(transaction); // Remove the transaction locally
+            originalTransactions.remove(transaction);
           });
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Transaction deleted successfully.'),
@@ -181,22 +182,43 @@ print(response.statusCode);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Transactions'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.filter_alt),
-            onPressed: () {
-              _openFilterDialog();
-            },
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF003366), Color(0xFF008080), Color(0xFF87CEEB)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          _buildSummaryHeader(), // Monthly summary
-          _buildTransactionList(), // Main transaction list
-        ],
+        ),
+        child: Column(
+          children: [
+            // Set the status bar color to transparent and blend with the app bar
+            Container(
+              padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+              child: AppBar(
+                title: Text(
+                  'Transactions',
+                  style: TextStyle(color: Colors.white), // Set text color for visibility
+                ),
+                backgroundColor: Colors.transparent, // Make the app bar background transparent
+                elevation: 0, // Remove the shadow effect
+                iconTheme: IconThemeData(color: Colors.white),
+                actions: [
+                  IconButton(
+                    icon: Icon(Icons.filter_alt, color: Colors.white), // Change icon color for visibility
+                    onPressed: () {
+                      _openFilterDialog();
+                    },
+                  ),
+                ],
+              ),
+            ),
+            _buildSummaryHeader(), // Monthly summary
+            Expanded(
+              child: _buildTransactionList(), // Main transaction list
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -257,6 +279,7 @@ print(response.statusCode);
     );
   }
 
+
   Widget _buildSummaryHeader() {
     double totalIncomeUSD = transactions
         .where((transaction) => transaction.type == 'income' && transaction.currency == 'USD')
@@ -274,8 +297,21 @@ print(response.statusCode);
         .where((transaction) => transaction.type == 'expense' && transaction.currency == 'LBP')
         .fold(0, (sum, transaction) => sum + transaction.amount);
 
-    return Padding(
+    return Container(
       padding: EdgeInsets.all(16.0),
+      margin: EdgeInsets.all(16.0), // Add margin around the box
+      decoration: BoxDecoration(
+        color: Colors.white, // White background
+        borderRadius: BorderRadius.circular(8.0), // Rounded corners
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5), // Shadow effect
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: Offset(0, 3), // changes position of shadow
+          ),
+        ],
+      ),
       child: Column(
         children: [
           Row(
@@ -340,8 +376,23 @@ print(response.statusCode);
 
 
   Widget _buildTransactionList() {
-    return Expanded(
+    return Container(
+      padding: EdgeInsets.only(top: 16.0, bottom: 16.0),
+      margin: EdgeInsets.all(16.0), // Add margin around the box
+      decoration: BoxDecoration(
+        color: Colors.white, // White background
+        borderRadius: BorderRadius.circular(8.0), // Rounded corners
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5), // Shadow effect
+            spreadRadius: 2,
+            blurRadius: 5,
+            offset: Offset(0, 3), // changes position of shadow
+          ),
+        ],
+      ),
       child: ListView.builder(
+        shrinkWrap: true, // This ensures the ListView takes only the space it needs
         itemCount: transactions.length,
         itemBuilder: (context, index) {
           Transaction transaction = transactions[index];
@@ -388,6 +439,7 @@ print(response.statusCode);
       ),
     );
   }
+
 
 
 
