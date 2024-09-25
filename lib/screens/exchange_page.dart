@@ -21,6 +21,7 @@ class _ExchangePageState extends State<ExchangePage> {
   double currentLBPBalance = 0.0;
   String selectedCurrencyTo = 'LBP'; // Currency being exchanged to
   double exchangeRate = 0.0; // For storing the exchange rate
+  DateTime? _selectedDate; // Variable to store the selected date
   TextEditingController amountController = TextEditingController();
   bool _isLoading = false;
 
@@ -62,6 +63,19 @@ class _ExchangePageState extends State<ExchangePage> {
         SnackBar(content: Text('Failed to load balances. Please try again.')),
       );
     }
+  }
+
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != _selectedDate)
+      setState(() {
+        _selectedDate = picked;
+      });
   }
 
   Future<void> exchangeCurrency() async {
@@ -114,6 +128,7 @@ class _ExchangePageState extends State<ExchangePage> {
           'to_account': toAccount,
           'amount': amount, // Send the original amount
           'exchange_rate': exchangeRate, // Send exchange rate
+          'date': _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : null,
         }),
       );
 
@@ -313,6 +328,27 @@ class _ExchangePageState extends State<ExchangePage> {
             ),
             contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
           ),
+        ),
+        SizedBox(height: 20),
+        // Date Picker Section
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _selectDate(context),
+                child: Text(
+                  _selectedDate == null
+                      ? 'Select Date'
+                      : 'Date: ${DateFormat('yyyy-MM-dd').format(_selectedDate!)}',
+                  style: TextStyle(color: Colors.black),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.85),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                ),
+              ),
+            ),
+          ],
         ),
         SizedBox(height: 20),
         SizedBox(

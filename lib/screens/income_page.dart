@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:intl/intl.dart'; // To format the selected date
 import 'package:spendwize_frontend/constants.dart'; // Your API endpoints/constants file
 
 class AddIncomePage extends StatefulWidget {
@@ -15,6 +16,7 @@ class _AddIncomePageState extends State<AddIncomePage> {
   final TextEditingController _descriptionController = TextEditingController();
   String _selectedCurrency = 'USD';
   String _selectedIncomeType = 'Salary';
+  DateTime? _selectedDate; // Variable to store the selected date
   bool _isLoading = false;
 
   final List<String> incomeTypes = ['Salary', 'Bonus', 'Investment', 'Freelance', 'Other'];
@@ -27,7 +29,7 @@ class _AddIncomePageState extends State<AddIncomePage> {
     setState(() {
       _isLoading = true;
     });
-
+    print(_selectedDate);
     String? token = await getToken();
     final response = await http.post(
       Uri.parse(addIncomeEndpoint),
@@ -40,6 +42,7 @@ class _AddIncomePageState extends State<AddIncomePage> {
         'currency': _selectedCurrency,
         'description': _descriptionController.text,
         'income_type': _selectedIncomeType,
+        'date': _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : null, // Sending the selected date
       }),
     );
     print(response.statusCode);
@@ -58,6 +61,20 @@ class _AddIncomePageState extends State<AddIncomePage> {
         SnackBar(content: Text('Failed to add income. Please try again.')),
       );
     }
+  }
+
+  // Function to pick a date
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != _selectedDate)
+      setState(() {
+        _selectedDate = picked;
+      });
   }
 
   @override
@@ -189,6 +206,27 @@ class _AddIncomePageState extends State<AddIncomePage> {
                             contentPadding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
                           ),
                           style: TextStyle(color: Colors.black),
+                        ),
+                        SizedBox(height: 20),
+                        // Date Picker Section
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () => _selectDate(context),
+                                child: Text(
+                                  _selectedDate == null
+                                      ? 'Select Date'
+                                      : 'Date: ${DateFormat('yyyy-MM-dd').format(_selectedDate!)}',
+                                  style: TextStyle(color: Colors.black),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white.withOpacity(0.85),
+                                  padding: EdgeInsets.symmetric(vertical: 16),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         SizedBox(height: 40),
                         ElevatedButton(

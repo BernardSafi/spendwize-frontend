@@ -9,6 +9,7 @@ import 'transaction_detail_page.dart';
 import 'package:spendwize_frontend/constants.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+
 class TransactionPage extends StatefulWidget {
   @override
   _TransactionPageState createState() => _TransactionPageState();
@@ -172,8 +173,6 @@ print(response.statusCode);
       }
     }
   }
-
-
 
 
 
@@ -412,12 +411,7 @@ print(response.statusCode);
                     color: transaction.type == 'income' ? Colors.green : Colors.red,
                   ),
                 ),
-                IconButton(
-                  icon: Icon(Icons.edit, color: Colors.blue),
-                  onPressed: () {
-                    // Implement your edit transaction logic here
-                  },
-                ),
+
                 IconButton(
                   icon: Icon(Icons.delete, color: Colors.red),
                   onPressed: () {

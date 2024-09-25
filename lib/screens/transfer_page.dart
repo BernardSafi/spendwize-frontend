@@ -22,55 +22,11 @@ class _TransferPageState extends State<AddTransferPage> {
   double currentUSDSavings = 0.0;
   double currentLBPSavings = 0.0;
   String selectedCurrency = 'USD';
+  DateTime? _selectedDate;
 
 
   bool isTransferReversed = false; // Variable to track transfer direction
   TextEditingController amountController = TextEditingController(); // Controller for the amount input
-  Future<void> walletToSavingUsd(double amount) async {
-    String? token = await storage.read(key: 'token'); // Retrieve the token from secure storage
-    final response = await http.post(
-      Uri.parse(walletToSavingsUSD),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'amount': amount,
-        // Add any other required fields (e.g., user_id, description, etc.)
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      // Handle success
-      print('Transfer to saving USD successful: ${response.body}');
-    } else {
-      // Handle error
-      print('Failed to transfer to saving USD: ${response.body}');
-    }
-  }
-
-  Future<void> savingToWalletUsd(double amount) async {
-    String? token = await storage.read(key: 'token'); // Retrieve the token from secure storage
-    final response = await http.post(
-      Uri.parse(savingsToWalletUSD),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: json.encode({
-        'amount': amount,
-        // Add any other required fields (e.g., user_id, description, etc.)
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      // Handle success
-      print('Transfer from saving USD successful: ${response.body}');
-    } else {
-      // Handle error
-      print('Failed to transfer from saving USD: ${response.body}');
-    }
-  }
 
 
   @override
@@ -143,7 +99,18 @@ class _TransferPageState extends State<AddTransferPage> {
     }
   }
 
-
+  Future<void> _selectDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (picked != null && picked != _selectedDate)
+      setState(() {
+        _selectedDate = picked;
+      });
+  }
 
   Future<void> transferFunds(String action, String currency) async {
     String? token = await getToken();
@@ -191,7 +158,8 @@ class _TransferPageState extends State<AddTransferPage> {
           'Content-Type': 'application/json',
         },
         body: jsonEncode({
-          'amount': amount, // Use the parsed amount
+          'amount': amount,
+          'date': _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : null,
         }),
       );
 
@@ -427,6 +395,27 @@ class _TransferPageState extends State<AddTransferPage> {
                   });
                 },
                 style: TextStyle(color: Colors.black),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 20),
+        // Date Picker Section
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _selectDate(context),
+                child: Text(
+                  _selectedDate == null
+                      ? 'Select Date'
+                      : 'Date: ${DateFormat('yyyy-MM-dd').format(_selectedDate!)}',
+                  style: TextStyle(color: Colors.black),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.85),
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                ),
               ),
             ),
           ],
