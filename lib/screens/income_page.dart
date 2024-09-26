@@ -6,11 +6,13 @@ import 'package:intl/intl.dart'; // To format the selected date
 import 'package:spendwize_frontend/constants.dart'; // Your API endpoints/constants file
 
 class AddIncomePage extends StatefulWidget {
+
   @override
   _AddIncomePageState createState() => _AddIncomePageState();
 }
 
 class _AddIncomePageState extends State<AddIncomePage> {
+
   final storage = FlutterSecureStorage();
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();

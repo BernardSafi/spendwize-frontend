@@ -94,12 +94,20 @@ class _TransactionPageState extends State<TransactionPage> {
     }
 
     // Filter by date range, if selected
+    // Ensure the date component is compared correctly
     if (selectedDateRange != null) {
       filteredTransactions = filteredTransactions
-          .where((transaction) =>
-      transaction.date.isAfter(selectedDateRange!.start) || transaction.date.isAtSameMomentAs(selectedDateRange!.start) &&
-          (transaction.date.isBefore(selectedDateRange!.end.add(Duration(days: 1))) ||
-              transaction.date.isAtSameMomentAs(selectedDateRange!.end)))
+          .where((transaction) {
+        // Ignore the time component by comparing only the date
+        DateTime transactionDate = DateTime(transaction.date.year, transaction.date.month, transaction.date.day);
+
+        DateTime startDate = DateTime(selectedDateRange!.start.year, selectedDateRange!.start.month, selectedDateRange!.start.day);
+        DateTime endDate = DateTime(selectedDateRange!.end.year, selectedDateRange!.end.month, selectedDateRange!.end.day);
+
+        // Filter for transactions between start and end dates (inclusive)
+        return (transactionDate.isAtSameMomentAs(startDate) || transactionDate.isAfter(startDate)) &&
+            (transactionDate.isAtSameMomentAs(endDate) || transactionDate.isBefore(endDate.add(Duration(days: 1))));
+      })
           .toList();
 
       print("Filtered by date range, count: ${filteredTransactions.length}");
@@ -231,41 +239,51 @@ print(response.statusCode);
                   ListTile(
                     leading: Icon(Icons.add_circle, color: Colors.green),
                     title: Text('Add Income'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => AddIncomePage()),
-                      );
-                    },
+                    onTap: () async {
+                  // Navigate and wait for the result
+                  await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AddIncomePage()),
+                  );
+                  // Refetch the transaction list after returning
+                  fetchTransactions();
+                  Navigator.pop(context); // Close the modal after action
+                  },
                   ),
                   ListTile(
                     leading: Icon(Icons.remove_circle, color: Colors.red),
                     title: Text('Add Expense'),
-                    onTap: () {
-                      Navigator.push(
+                    onTap: () async {
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => AddExpensePage()),
                       );
+                      fetchTransactions();
+                      Navigator.pop(context); // Close the modal after action
                     },
                   ),
                   ListTile(
                     leading: Icon(Icons.compare_arrows, color: Colors.blue),
                     title: Text('Add Transfer'),
-                    onTap: () {
-                      Navigator.push(
+                    onTap: () async {
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => AddTransferPage()),
                       );
+                      fetchTransactions();
+                      Navigator.pop(context); // Close the modal after action
                     },
                   ),
                   ListTile(
                     leading: Icon(Icons.sync_alt, color: Colors.orange),
                     title: Text('Add Exchange'),
-                    onTap: () {
-                      Navigator.push(
+                    onTap: () async {
+                      await Navigator.push(
                         context,
                         MaterialPageRoute(builder: (context) => ExchangePage()),
                       );
+                      fetchTransactions();
+                      Navigator.pop(context); // Close the modal after action
                     },
                   ),
                 ],

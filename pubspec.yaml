@@ -31,7 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
   intl: ^0.18.0
-
+  fl_chart: ^0.69.0
   http: ^0.13.4
   flutter_secure_storage: ^6.0.0
 

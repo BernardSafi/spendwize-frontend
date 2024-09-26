@@ -9,6 +9,7 @@ import 'expense_page.dart';
 import 'transfer_page.dart';
 import 'exchange_page.dart';
 import 'transaction_page.dart';
+import 'report_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -233,6 +234,10 @@ class _HomePageState extends State<HomePage> {
                   await fetchBalances();
                 } else if (index == 2) {
                   // Navigate to Reports (implement your logic here)
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ReportPage()),
+                  );
                 } else if (index == 3) {
                   // Navigate to Settings (implement your logic here)
                 }
