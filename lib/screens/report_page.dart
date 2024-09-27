@@ -93,6 +93,9 @@ class _ReportPageState extends State<ReportPage> {
   @override
   void initState() {
     super.initState();
+    final now = DateTime.now();
+    startDate = DateTime(now.year, now.month, 1); // Beginning of the current month
+    endDate = DateTime(now.year, now.month + 1, 0); // End of the current month
     fetchTransactions(); // Fetch transactions when the page loads
   }
 
@@ -222,11 +225,14 @@ class _ReportPageState extends State<ReportPage> {
     // Create a list of FlSpot based on the aggregated daily amounts
     return dateRange.map((date) {
       double amount = dailyAmounts[date] ?? 0.0; // Get the amount for the date or 0 if none
-      // Use the index of the date in the dateRange as the x-value
-      double xValue = dateRange.indexOf(date).toDouble();
-      return FlSpot(xValue, amount); // x is the index of the date, y is aggregated amount
+
+      // Convert date to a numeric value (e.g., days since startDate)
+      double xValue = date.difference(startDate).inDays.toDouble();
+
+      return FlSpot(xValue, amount); // x is the days since startDate, y is the aggregated amount
     }).toList();
   }
+
 
 
 
@@ -384,6 +390,7 @@ class _ReportPageState extends State<ReportPage> {
                         color: Colors.green,
                         barWidth: 3,
                         belowBarData: BarAreaData(show: false),
+
                       ),
                       LineChartBarData(
                         spots: getLineChartData('expense',startDate,endDate),
