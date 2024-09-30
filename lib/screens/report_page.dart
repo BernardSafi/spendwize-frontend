@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:intl/intl.dart';
 import 'package:spendwize_frontend/constants.dart';
 
 class Transaction {
@@ -60,7 +61,8 @@ class ReportPage extends StatefulWidget {
 class _ReportPageState extends State<ReportPage> {
   final storage = FlutterSecureStorage();
   List<Transaction> transactions = [];
-  String selectedCurrency = 'USD'; // Default currency filter
+  String selectedCurrency = 'USD'; // Default currency filter for pie charts
+  String selectedYear = DateTime.now().year.toString(); // Default year
   bool isLoading = true;
   DateTime? startDate;
   DateTime? endDate;
@@ -188,56 +190,6 @@ class _ReportPageState extends State<ReportPage> {
     }).toList();
   }
 
-  // Prepare line chart data for income and expenses
-// Prepare line chart data for income and expenses
-  List<FlSpot> getLineChartData(String type, DateTime? startDate, DateTime? endDate) {
-    // Get filtered transactions based on the selected type
-    List<Transaction> filteredTransactions = getFilteredTransactions(type);
-
-    // Map to hold aggregated amounts for each day within the date range
-    Map<DateTime, double> dailyAmounts = {};
-
-    // Return an empty list if dates are null
-    if (startDate == null || endDate == null) {
-      return [];
-    }
-
-    // Iterate through the filtered transactions
-    for (var transaction in filteredTransactions) {
-      // Check if the transaction date is within the selected date range
-      if (transaction.date.isAfter(startDate.subtract(Duration(days: 1))) &&
-          transaction.date.isBefore(endDate.add(Duration(days: 1)))) {
-
-        // Normalize the transaction date to midnight to handle aggregation
-        DateTime normalizedDate = DateTime(transaction.date.year, transaction.date.month, transaction.date.day);
-
-        // Aggregate amounts by date
-        dailyAmounts[normalizedDate] = (dailyAmounts[normalizedDate] ?? 0) + transaction.amount;
-      }
-    }
-
-    // Generate a list of dates from startDate to endDate
-    List<DateTime> dateRange = [];
-    for (var d = startDate; d.isBefore(endDate.add(Duration(days: 1))); d = d.add(Duration(days: 1))) {
-      dateRange.add(d);
-    }
-
-    // Create a list of FlSpot based on the aggregated daily amounts
-    return dateRange.map((date) {
-      double amount = dailyAmounts[date] ?? 0.0; // Get the amount for the date or 0 if none
-
-      // Convert date to a numeric value (e.g., days since startDate)
-      double xValue = date.difference(startDate).inDays.toDouble();
-
-      return FlSpot(xValue, amount); // x is the days since startDate, y is the aggregated amount
-    }).toList();
-  }
-
-
-
-
-
-
   // Generate legend for subtypes
   Widget buildLegend(Map<String, Color> subtypeColors) {
     return Column(
@@ -273,68 +225,113 @@ class _ReportPageState extends State<ReportPage> {
     }
   }
 
+  // Function to get transactions for the bar chart based on currency and year
+  List<Transaction> getBarChartTransactions() {
+    return transactions.where((transaction) {
+      return transaction.currency == selectedCurrency &&
+          transaction.date.year.toString() == selectedYear;
+    }).toList();
+  }
+
+  // Function to generate bar chart data for income and expenses
+  List<BarChartGroupData> getBarChartData() {
+    final List<Transaction> filteredTransactions = getBarChartTransactions();
+    Map<int, double> incomeByMonth = {};
+    Map<int, double> expensesByMonth = {};
+
+    for (var transaction in filteredTransactions) {
+      int month = transaction.date.month;
+      if (transaction.type == 'income') {
+        incomeByMonth[month] = (incomeByMonth[month] ?? 0) + transaction.amount;
+      } else if (transaction.type == 'expense') {
+        expensesByMonth[month] = (expensesByMonth[month] ?? 0) + transaction.amount;
+      }
+    }
+
+    List<BarChartGroupData> barGroups = [];
+    for (int month = 1; month <= 12; month++) {
+      barGroups.add(
+        BarChartGroupData(
+          x: month - 1,
+          barRods: [
+            BarChartRodData(
+              toY: incomeByMonth[month] ?? 0,
+              color: Colors.green,
+              width: 20,
+            ),
+            BarChartRodData(
+              toY: expensesByMonth[month] ?? 0,
+              color: Colors.red,
+              width: 20,
+            ),
+          ],
+        ),
+      );
+    }
+    return barGroups;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final DateFormat dateFormat = DateFormat('dd-MM-yyyy');
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Transaction Report"),
+        title: const Text("Reports"),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
+          : SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Select Currency and Date Range",
-                style:
-                TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+              // Date range selection and currency dropdown in one row
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Currency Selector
-                  DropdownButton<String>(
-                    value: selectedCurrency,
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedCurrency = newValue!;
-                      });
-                    },
-                    items: <String>['USD', 'LBP']
-                        .map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                  ),
-                  // Date Range Button
                   ElevatedButton(
                     onPressed: () => _selectDateRange(context),
                     child: const Text("Select Date Range"),
                   ),
+                  Row(
+                    children: [
+                      const Text("Select Currency:"),
+                      const SizedBox(width: 10),
+                      DropdownButton<String>(
+                        value: selectedCurrency,
+                        items: const [
+                          DropdownMenuItem(value: 'USD', child: Text('USD')),
+                          DropdownMenuItem(value: 'LBP', child: Text('LBP')),
+                        ],
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedCurrency = newValue!;
+                          });
+                        },
+                      ),
+                    ],
+                  ),
                 ],
               ),
-              const SizedBox(height: 20),
+
+              const SizedBox(height: 10),
+
+              // Start Date and End Date text under the Date Range and Currency dropdown
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    "Start Date: ${startDate != null ? startDate!.toLocal().toString().split(' ')[0] : 'Not selected'}",
-                  ),
-                  Text(
-                    "End Date: ${endDate != null ? endDate!.toLocal().toString().split(' ')[0] : 'Not selected'}",
-                  ),
+                  Text('Start Date: ${startDate != null ? dateFormat.format(startDate!) : 'Not selected'}'),
+                  const SizedBox(width: 20),
+                  Text('End Date: ${endDate != null ? dateFormat.format(endDate!) : 'Not selected'}'),
                 ],
               ),
+
               const SizedBox(height: 20),
+
+              // Income Pie Chart
               const Text(
-                "Income Pie Chart",
-                style:
-                TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                "Income Distribution",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               SizedBox(
                 height: 200,
@@ -347,13 +344,13 @@ class _ReportPageState extends State<ReportPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
               buildLegend(incomeColors),
+
+              // Expense Pie Chart
               const SizedBox(height: 20),
               const Text(
-                "Expenses Pie Chart",
-                style:
-                TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                "Expense Distribution",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               SizedBox(
                 height: 200,
@@ -366,40 +363,97 @@ class _ReportPageState extends State<ReportPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
               buildLegend(expenseColors),
+
               const SizedBox(height: 20),
-              const Text(
-                "Income and Expenses Line Chart",
-                style:
-                TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+
+              // Year selector for bar chart
+              Row(
+                children: [
+                  const Text("Select Year:"),
+                  const SizedBox(width: 10),
+                  DropdownButton<String>(
+                    value: selectedYear,
+                    items: List.generate(10, (index) {
+                      final year = DateTime.now().year - index;
+                      return DropdownMenuItem<String>(
+                        value: year.toString(),
+                        child: Text(year.toString()),
+                      );
+                    }),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedYear = newValue!;
+                      });
+                    },
+                  ),
+                ],
               ),
+
+              const SizedBox(height: 20),
+
+              // Monthly Income and Expenses header
+              const Text(
+                "Monthly Income and Expenses",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(
+                  "Selected Year: $selectedYear",
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+                ),
+              ),
+
               SizedBox(
                 height: 300,
-                child: LineChart(
-                  LineChartData(
-                    borderData: FlBorderData(
-                      show: true,
-                      border: Border.all(
-                          color: const Color(0xff37434d), width: 1),
+                child: BarChart(
+                  BarChartData(
+                    barGroups: getBarChartData(),
+                    titlesData: FlTitlesData(
+                      leftTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: true),
+                      ),
+                      bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                          showTitles: true,
+                          getTitlesWidget: (value, meta) {
+                            switch (value.toInt()) {
+                              case 0:
+                                return const Text('Jan');
+                              case 1:
+                                return const Text('Feb');
+                              case 2:
+                                return const Text('Mar');
+                              case 3:
+                                return const Text('Apr');
+                              case 4:
+                                return const Text('May');
+                              case 5:
+                                return const Text('Jun');
+                              case 6:
+                                return const Text('Jul');
+                              case 7:
+                                return const Text('Aug');
+                              case 8:
+                                return const Text('Sep');
+                              case 9:
+                                return const Text('Oct');
+                              case 10:
+                                return const Text('Nov');
+                              case 11:
+                                return const Text('Dec');
+                              default:
+                                return const Text('');
+                            }
+                          },
+                        ),
+                      ),
+                      topTitles: AxisTitles(
+                        sideTitles: SideTitles(showTitles: false),
+                      ),
                     ),
-                    lineBarsData: [
-                      LineChartBarData(
-                        spots: getLineChartData('income',startDate,endDate),
-                        isCurved: true,
-                        color: Colors.green,
-                        barWidth: 3,
-                        belowBarData: BarAreaData(show: false),
-
-                      ),
-                      LineChartBarData(
-                        spots: getLineChartData('expense',startDate,endDate),
-                        isCurved: true,
-                        color: Colors.red,
-                        barWidth: 3,
-                        belowBarData: BarAreaData(show: false),
-                      ),
-                    ],
                   ),
                 ),
               ),
@@ -409,4 +463,10 @@ class _ReportPageState extends State<ReportPage> {
       ),
     );
   }
+
+
+
+
+
+
 }
