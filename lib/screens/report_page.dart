@@ -233,18 +233,14 @@ class _ReportPageState extends State<ReportPage> {
     }).toList();
   }
 
-  // Function to generate bar chart data for income and expenses
-  List<BarChartGroupData> getBarChartData() {
+  List<BarChartGroupData> getIncomeBarChartData() {
     final List<Transaction> filteredTransactions = getBarChartTransactions();
     Map<int, double> incomeByMonth = {};
-    Map<int, double> expensesByMonth = {};
 
     for (var transaction in filteredTransactions) {
-      int month = transaction.date.month;
       if (transaction.type == 'income') {
+        int month = transaction.date.month;
         incomeByMonth[month] = (incomeByMonth[month] ?? 0) + transaction.amount;
-      } else if (transaction.type == 'expense') {
-        expensesByMonth[month] = (expensesByMonth[month] ?? 0) + transaction.amount;
       }
     }
 
@@ -259,6 +255,31 @@ class _ReportPageState extends State<ReportPage> {
               color: Colors.green,
               width: 20,
             ),
+          ],
+        ),
+      );
+    }
+    return barGroups;
+  }
+
+// Function to generate bar chart data for expenses
+  List<BarChartGroupData> getExpenseBarChartData() {
+    final List<Transaction> filteredTransactions = getBarChartTransactions();
+    Map<int, double> expensesByMonth = {};
+
+    for (var transaction in filteredTransactions) {
+      if (transaction.type == 'expense') {
+        int month = transaction.date.month;
+        expensesByMonth[month] = (expensesByMonth[month] ?? 0) + transaction.amount;
+      }
+    }
+
+    List<BarChartGroupData> barGroups = [];
+    for (int month = 1; month <= 12; month++) {
+      barGroups.add(
+        BarChartGroupData(
+          x: month - 1,
+          barRods: [
             BarChartRodData(
               toY: expensesByMonth[month] ?? 0,
               color: Colors.red,
@@ -275,194 +296,356 @@ class _ReportPageState extends State<ReportPage> {
   Widget build(BuildContext context) {
     final DateFormat dateFormat = DateFormat('dd-MM-yyyy');
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Reports"),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // Date range selection and currency dropdown in one row
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Stack(
+        children: [
+          // Gradient background
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF003366), Color(0xFF008080), Color(0xFF87CEEB)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+          // Main content
+          SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
                 children: [
-                  ElevatedButton(
-                    onPressed: () => _selectDateRange(context),
-                    child: const Text("Select Date Range"),
+                  AppBar(
+                    title: const Text(
+                      "Reports",
+                      style: TextStyle(color: Colors.white), // Change AppBar text color to white
+                    ),
+                    backgroundColor: Colors.transparent, // Make AppBar transparent
+                    elevation: 0, // Remove shadow
+                    iconTheme: const IconThemeData(color: Colors.white), // Change back arrow color to white
                   ),
-                  Row(
+                   isLoading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                        color: Colors.white, // Change loading indicator color to white
+                        ),)
+                      : Column(
                     children: [
-                      const Text("Select Currency:"),
-                      const SizedBox(width: 10),
-                      DropdownButton<String>(
-                        value: selectedCurrency,
-                        items: const [
-                          DropdownMenuItem(value: 'USD', child: Text('USD')),
-                          DropdownMenuItem(value: 'LBP', child: Text('LBP')),
+                      // Date range selection and currency dropdown in one row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          ElevatedButton(
+                            onPressed: () => _selectDateRange(context),
+                            style: ElevatedButton.styleFrom(
+                              foregroundColor: Colors.black, // Set the text color to black
+                            ),
+                            child: const Text("Select Date Range"),
+                          ),
+
+                          Row(
+                            children: [
+                              const Text(
+                                "Select Currency:",
+                                style: TextStyle(color: Colors.white), // Change text color to white
+                              ),
+                              const SizedBox(width: 10),
+                              DropdownButton<String>(
+                                value: selectedCurrency,
+                                items: const [
+                                  DropdownMenuItem(value: 'USD', child: Text('USD')),
+                                  DropdownMenuItem(value: 'LBP', child: Text('LBP')),
+                                ],
+                                onChanged: (String? newValue) {
+                                  setState(() {
+                                    selectedCurrency = newValue!;
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
                         ],
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedCurrency = newValue!;
-                          });
-                        },
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Start Date and End Date text
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Start Date: ${startDate != null ? dateFormat.format(startDate!) : 'Not selected'}',
+                            style: const TextStyle(color: Colors.white), // Change text color to white
+                          ),
+                          const SizedBox(width: 20),
+                          Text(
+                            'End Date: ${endDate != null ? dateFormat.format(endDate!) : 'Not selected'}',
+                            style: const TextStyle(color: Colors.white), // Change text color to white
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Income Pie Chart with Legend
+                      const Text(
+                        "Income Distribution",
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white), // Change text color to white
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 5,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: 200,
+                              child: PieChart(
+                                PieChartData(
+                                  sections: getPieChartData(
+                                    getFilteredTransactions('income'),
+                                    incomeColors,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            buildLegend(incomeColors),
+                          ],
+                        ),
+                      ),
+
+                      // Expense Pie Chart with Legend
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Expense Distribution",
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white), // Change text color to white
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 5,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            SizedBox(
+                              height: 200,
+                              child: PieChart(
+                                PieChartData(
+                                  sections: getPieChartData(
+                                    getFilteredTransactions('expense'),
+                                    expenseColors,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            buildLegend(expenseColors),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Year selector for bar chart
+                      Row(
+                        children: [
+                          const Text(
+                            "Select Year:",
+                            style: TextStyle(color: Colors.white), // Change text color to white
+                          ),
+                          const SizedBox(width: 10),
+                          DropdownButton<String>(
+                            value: selectedYear,
+                            items: List.generate(10, (index) {
+                              final year = DateTime.now().year - index;
+                              return DropdownMenuItem<String>(
+                                value: year.toString(),
+                                child: Text(year.toString(), style: const TextStyle(color: Colors.black)), // Change text color to white
+                              );
+                            }),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                selectedYear = newValue!;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+
+                      // Monthly Income and Expenses header
+                      const Text(
+                        "Monthly Income and Expenses",
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white), // Change text color to white
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: Text(
+                          "Selected Year: $selectedYear",
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.white), // Change text color to white
+                        ),
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 5,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(16.0),
+                        child: SizedBox(
+                          height: 300,
+                          child: BarChart(
+                            BarChartData(
+                              barGroups: getIncomeBarChartData(),
+                              titlesData: FlTitlesData(
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    getTitlesWidget: (value, meta) {
+                                      switch (value.toInt()) {
+                                        case 0:
+                                          return const Text('Jan', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 1:
+                                          return const Text('Feb', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 2:
+                                          return const Text('Mar', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 3:
+                                          return const Text('Apr', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 4:
+                                          return const Text('May', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 5:
+                                          return const Text('Jun', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 6:
+                                          return const Text('Jul', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 7:
+                                          return const Text('Aug', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 8:
+                                          return const Text('Sep', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 9:
+                                          return const Text('Oct', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 10:
+                                          return const Text('Nov', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 11:
+                                          return const Text('Dec', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        default:
+                                          return const Text('');
+                                      }
+                                    },
+                                  ),
+                                ),
+                                topTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(15),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 5,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(16.0),
+                        child: SizedBox(
+                          height: 300,
+                          child: BarChart(
+                            BarChartData(
+                              barGroups: getExpenseBarChartData(),
+                              titlesData: FlTitlesData(
+                                leftTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                                bottomTitles: AxisTitles(
+                                  sideTitles: SideTitles(
+                                    showTitles: true,
+                                    getTitlesWidget: (value, meta) {
+                                      switch (value.toInt()) {
+                                        case 0:
+                                          return const Text('Jan', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 1:
+                                          return const Text('Feb', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 2:
+                                          return const Text('Mar', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 3:
+                                          return const Text('Apr', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 4:
+                                          return const Text('May', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 5:
+                                          return const Text('Jun', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 6:
+                                          return const Text('Jul', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 7:
+                                          return const Text('Aug', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 8:
+                                          return const Text('Sep', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 9:
+                                          return const Text('Oct', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 10:
+                                          return const Text('Nov', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        case 11:
+                                          return const Text('Dec', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                        default:
+                                          return const Text('');
+                                      }
+                                    },
+                                  ),
+                                ),
+                                topTitles: AxisTitles(
+                                  sideTitles: SideTitles(showTitles: false),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 20),
                 ],
               ),
-
-              const SizedBox(height: 10),
-
-              // Start Date and End Date text under the Date Range and Currency dropdown
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Start Date: ${startDate != null ? dateFormat.format(startDate!) : 'Not selected'}'),
-                  const SizedBox(width: 20),
-                  Text('End Date: ${endDate != null ? dateFormat.format(endDate!) : 'Not selected'}'),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // Income Pie Chart
-              const Text(
-                "Income Distribution",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(
-                height: 200,
-                child: PieChart(
-                  PieChartData(
-                    sections: getPieChartData(
-                      getFilteredTransactions('income'),
-                      incomeColors,
-                    ),
-                  ),
-                ),
-              ),
-              buildLegend(incomeColors),
-
-              // Expense Pie Chart
-              const SizedBox(height: 20),
-              const Text(
-                "Expense Distribution",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(
-                height: 200,
-                child: PieChart(
-                  PieChartData(
-                    sections: getPieChartData(
-                      getFilteredTransactions('expense'),
-                      expenseColors,
-                    ),
-                  ),
-                ),
-              ),
-              buildLegend(expenseColors),
-
-              const SizedBox(height: 20),
-
-              // Year selector for bar chart
-              Row(
-                children: [
-                  const Text("Select Year:"),
-                  const SizedBox(width: 10),
-                  DropdownButton<String>(
-                    value: selectedYear,
-                    items: List.generate(10, (index) {
-                      final year = DateTime.now().year - index;
-                      return DropdownMenuItem<String>(
-                        value: year.toString(),
-                        child: Text(year.toString()),
-                      );
-                    }),
-                    onChanged: (String? newValue) {
-                      setState(() {
-                        selectedYear = newValue!;
-                      });
-                    },
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // Monthly Income and Expenses header
-              const Text(
-                "Monthly Income and Expenses",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Text(
-                  "Selected Year: $selectedYear",
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-                ),
-              ),
-
-              SizedBox(
-                height: 300,
-                child: BarChart(
-                  BarChartData(
-                    barGroups: getBarChartData(),
-                    titlesData: FlTitlesData(
-                      leftTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: true),
-                      ),
-                      bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          getTitlesWidget: (value, meta) {
-                            switch (value.toInt()) {
-                              case 0:
-                                return const Text('Jan');
-                              case 1:
-                                return const Text('Feb');
-                              case 2:
-                                return const Text('Mar');
-                              case 3:
-                                return const Text('Apr');
-                              case 4:
-                                return const Text('May');
-                              case 5:
-                                return const Text('Jun');
-                              case 6:
-                                return const Text('Jul');
-                              case 7:
-                                return const Text('Aug');
-                              case 8:
-                                return const Text('Sep');
-                              case 9:
-                                return const Text('Oct');
-                              case 10:
-                                return const Text('Nov');
-                              case 11:
-                                return const Text('Dec');
-                              default:
-                                return const Text('');
-                            }
-                          },
-                        ),
-                      ),
-                      topTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
+
+
+
+
+
+
 
 
 
