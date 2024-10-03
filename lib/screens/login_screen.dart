@@ -28,7 +28,14 @@ class LoginScreen extends StatelessWidget {
         MaterialPageRoute(builder: (context) => HomePage()),
       );
     } else {
-      _showDialog(context, 'Error', 'Login failed: ${response.body}', false);
+      String errorMessage;
+      try {
+        final Map<String, dynamic> responseData = jsonDecode(response.body);
+        errorMessage = responseData['error']; // Adjust the key based on your API response structure
+      } catch (e) {
+        errorMessage = 'Registration failed. Please try again.'; // Fallback if JSON decoding fails
+      }
+      _showDialog(context, 'Error', 'Registration failed: $errorMessage', false);
     }
   }
 
