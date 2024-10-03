@@ -10,6 +10,7 @@ import 'transfer_page.dart';
 import 'exchange_page.dart';
 import 'transaction_page.dart';
 import 'report_page.dart';
+import 'about_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -53,15 +54,14 @@ class _HomePageState extends State<HomePage> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      print(data);
+
       setState(() {
         currentUSDSavings = double.tryParse(data['usd_balance'].toString()) ?? 0.0;
         currentLBPSavings = double.tryParse(data['lbp_balance'].toString()) ?? 0.0;
       });
 
     } else {
-      print('Failed to retrieve savings balance: ${response.statusCode}');
-      print('Response body: ${response.body}');
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load savings balances. Please try again.')),
       );
@@ -84,10 +84,8 @@ class _HomePageState extends State<HomePage> {
         currentUSDBalance = double.tryParse(data['usd_balance'].toString()) ?? 0.0;
         currentLBPBalance = double.tryParse(data['lbp_balance'].toString()) ?? 0.0;
       });
-      print("Current USD Balance: ${data['usd_balance']}");
+
     } else {
-      print('Failed to retrieve wallet balance: ${response.statusCode}');
-      print('Response body: ${response.body}');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load balances. Please try again.')),
       );
@@ -104,14 +102,11 @@ class _HomePageState extends State<HomePage> {
     );
 
     if (response.statusCode == 200) {
-      print('ok');
       final data = jsonDecode(response.body);
       setState(() {
         userName = data['name']; // Set the user's name
       });
     } else {
-      print('Failed to retrieve user name: ${response.statusCode}');
-      print('Response body: ${response.body}');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load user name. Please try again.')),
       );
@@ -122,7 +117,6 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final isPortrait = mediaQuery.orientation == Orientation.portrait;
-    final screenHeight = mediaQuery.size.height;
     final screenWidth = mediaQuery.size.width;
 
     return Scaffold(
@@ -217,7 +211,7 @@ class _HomePageState extends State<HomePage> {
                 BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
                 BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Transactions'),
                 BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Reports'),
-                BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+                BottomNavigationBarItem(icon: Icon(Icons.info_outline), label: 'About'),
               ],
               currentIndex: 0,
               onTap: (index) async {
@@ -239,7 +233,11 @@ class _HomePageState extends State<HomePage> {
                     MaterialPageRoute(builder: (context) => ReportPage()),
                   );
                 } else if (index == 3) {
-                  // Navigate to Settings (implement your logic here)
+                  // Navigate to About (implement your logic here)
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => AboutPage()),
+                  );
                 }
               },
               type: BottomNavigationBarType.fixed,

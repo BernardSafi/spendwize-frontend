@@ -39,7 +39,7 @@ class _TransactionPageState extends State<TransactionPage> {
           'Content-Type': 'application/json', // Specify content type
         },
       );
-      print(response.statusCode);
+
       if (response.statusCode == 201) { // Check for 200 (OK)
         // Parse the JSON response into a list of Transaction objects
         final List<dynamic> data = json.decode(response.body);
@@ -47,6 +47,10 @@ class _TransactionPageState extends State<TransactionPage> {
           transactions = data
               .map((transactionJson) => Transaction.fromJson(transactionJson))
               .toList();
+
+          // Sort the transactions by date in descending order
+          transactions.sort((a, b) => b.date.compareTo(a.date));
+
           originalTransactions = List.from(transactions); // Store original transactions
 
           // Initially load all transactions without filtering
@@ -56,10 +60,8 @@ class _TransactionPageState extends State<TransactionPage> {
         });
       } else {
         // Handle error response
-        print('Failed to load transactions');
       }
     } catch (e) {
-      print('Error fetching transactions: $e');
     }
   }
 
@@ -68,18 +70,14 @@ class _TransactionPageState extends State<TransactionPage> {
     // Start with the original transactions
     List<Transaction> filteredTransactions = List.from(originalTransactions);
 
-    // Log the initial count of transactions
-    print("Original transaction count: ${originalTransactions.length}");
 
     // Filter by currency, if it's not 'All'
     if (filterCurrency != 'All') {
       filteredTransactions = filteredTransactions
           .where((transaction) => transaction.currency == filterCurrency)
           .toList();
-      print("Filtered by currency '${filterCurrency}', count: ${filteredTransactions.length}");
     } else {
-      // If 'All' is selected, show both 'USD' and 'LBP' transactions (no filtering)
-      print("Currency filter is 'All', no currency filtering applied.");
+
     }
 
     // Filter by transaction type, but only if it's not 'All'
@@ -87,10 +85,9 @@ class _TransactionPageState extends State<TransactionPage> {
       filteredTransactions = filteredTransactions
           .where((transaction) => transaction.type.toLowerCase() == filterType.toLowerCase())
           .toList();
-      print("Filtered by type '${filterType}', count: ${filteredTransactions.length}");
+
     } else {
-      // If 'All' is selected, no filtering by type
-      print("Type filter is 'All', no type filtering applied.");
+
     }
 
     // Filter by date range, if selected
@@ -110,13 +107,11 @@ class _TransactionPageState extends State<TransactionPage> {
       })
           .toList();
 
-      print("Filtered by date range, count: ${filteredTransactions.length}");
     }
 
     // Update the displayed transactions
     setState(() {
       transactions = filteredTransactions; // Display filtered or all if no filtering
-      print("Final transaction count for display: ${transactions.length}");
     });
   }
 
@@ -161,7 +156,7 @@ class _TransactionPageState extends State<TransactionPage> {
             'Content-Type': 'application/json',
           },
         );
-print(response.statusCode);
+
         if (response.statusCode == 200) {
           setState(() {
             transactions.remove(transaction); // Remove the transaction locally
@@ -171,13 +166,11 @@ print(response.statusCode);
             content: Text('Transaction deleted successfully.'),
           ));
         } else {
-          print('Failed to delete transaction');
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('Failed to delete transaction.'),
           ));
         }
       } catch (e) {
-        print('Error deleting transaction: $e');
       }
     }
   }

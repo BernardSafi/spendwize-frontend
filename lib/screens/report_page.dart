@@ -121,13 +121,11 @@ class _ReportPageState extends State<ReportPage> {
           isLoading = false;
         });
       } else {
-        print('Failed to load transactions: ${response.statusCode}');
         setState(() {
           isLoading = false;
         });
       }
     } catch (e) {
-      print('Error fetching transactions: $e');
       setState(() {
         isLoading = false;
       });

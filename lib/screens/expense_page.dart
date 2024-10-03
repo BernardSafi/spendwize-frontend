@@ -48,8 +48,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
           'date': _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : null,
         }),
       );
-print(response.statusCode);
-print(response.body);
       setState(() {
         _isLoading = false;
       });
@@ -84,9 +82,9 @@ print(response.body);
     return Theme(
       data: Theme.of(context).copyWith(
         textSelectionTheme: TextSelectionThemeData(
-          cursorColor: Color(0xFF003366), // Cursor color
-          selectionColor: Colors.lightBlue.withOpacity(0.5), // Selection color
-          selectionHandleColor: Colors.blue, // Selection handles color
+          cursorColor: Color(0xFF003366),
+          selectionColor: Color(0xFF003366).withOpacity(0.5),
+          selectionHandleColor: Color(0xFF003366),
         ),
       ),
       child: Scaffold(
@@ -118,14 +116,6 @@ print(response.body);
                       Navigator.pop(context);
                     },
                   ),
-                  actions: [
-                    IconButton(
-                      icon: Icon(Icons.account_circle, color: Colors.white),
-                      onPressed: () {
-                        // Profile settings navigation
-                      },
-                    ),
-                  ],
                 ),
                 Expanded(
                   child: Padding(
@@ -259,29 +249,6 @@ print(response.body);
                   ),
                 ),
               ],
-            ),
-            // Positioned BottomNavigationBar inside Stack
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: BottomNavigationBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                selectedItemColor: Colors.black,
-                unselectedItemColor: Colors.black, // All items appear unselected
-                items: [
-                  BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-                  BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Transactions'),
-                  BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Reports'),
-                  BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-                ],
-                currentIndex: 0,
-                onTap: (index) {
-                  // Handle navigation based on the selected index
-                },
-                type: BottomNavigationBarType.fixed,
-              ),
             ),
           ],
         ),

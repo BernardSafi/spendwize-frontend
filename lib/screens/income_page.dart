@@ -31,7 +31,7 @@ class _AddIncomePageState extends State<AddIncomePage> {
     setState(() {
       _isLoading = true;
     });
-    print(_selectedDate);
+
     String? token = await getToken();
     final response = await http.post(
       Uri.parse(addIncomeEndpoint),
@@ -47,7 +47,7 @@ class _AddIncomePageState extends State<AddIncomePage> {
         'date': _selectedDate != null ? DateFormat('yyyy-MM-dd').format(_selectedDate!) : null, // Sending the selected date
       }),
     );
-    print(response.statusCode);
+
 
     setState(() {
       _isLoading = false;
@@ -85,8 +85,8 @@ class _AddIncomePageState extends State<AddIncomePage> {
       data: Theme.of(context).copyWith(
         textSelectionTheme: TextSelectionThemeData(
           cursorColor: Color(0xFF003366),
-          selectionColor: Colors.lightBlue.withOpacity(0.5),
-          selectionHandleColor: Colors.blue,
+          selectionColor: Color(0xFF003366).withOpacity(0.5),
+          selectionHandleColor: Color(0xFF003366),
         ),
       ),
       child: Scaffold(
@@ -113,14 +113,6 @@ class _AddIncomePageState extends State<AddIncomePage> {
                       Navigator.pop(context);
                     },
                   ),
-                  actions: [
-                    IconButton(
-                      icon: Icon(Icons.account_circle, color: Colors.white),
-                      onPressed: () {
-                        // Profile settings navigation
-                      },
-                    ),
-                  ],
                 ),
                 Expanded(
                   child: Padding(
@@ -249,28 +241,6 @@ class _AddIncomePageState extends State<AddIncomePage> {
                   ),
                 ),
               ],
-            ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: BottomNavigationBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                selectedItemColor: Colors.black,
-                unselectedItemColor: Colors.black,
-                items: [
-                  BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-                  BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Transactions'),
-                  BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Reports'),
-                  BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-                ],
-                currentIndex: 0,
-                onTap: (index) {
-                  // Handle navigation based on the selected index
-                },
-                type: BottomNavigationBarType.fixed,
-              ),
             ),
           ],
         ),

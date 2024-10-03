@@ -90,7 +90,15 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: Color(0xFF003366),
+          selectionColor: Color(0xFF003366).withOpacity(0.5),
+          selectionHandleColor: Color(0xFF003366),
+        ),
+      ),
+    child: Scaffold(
       extendBodyBehindAppBar: true, // This allows the body to extend behind the AppBar
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -199,6 +207,7 @@ class LoginScreen extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 }

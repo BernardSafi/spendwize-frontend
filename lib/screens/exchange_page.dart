@@ -58,7 +58,6 @@ class _ExchangePageState extends State<ExchangePage> {
         currentLBPBalance = double.tryParse(data['lbp_balance'].toString()) ?? 0.0;
       });
     } else {
-      print('Failed to retrieve wallet balance: ${response.statusCode}');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to load balances. Please try again.')),
       );
@@ -111,11 +110,10 @@ class _ExchangePageState extends State<ExchangePage> {
       fromAccount = 'wallet_lbp';
       toAccount = 'wallet_usd';
     }
-    print(fromAccount);
-    print(toAccount);
+
 
     try {
-      print(currencyExchangeEndpoint);
+
       // Perform the API request
       final response = await http.post(
         Uri.parse(currencyExchangeEndpoint), // Replace with your actual exchange endpoint
@@ -135,7 +133,7 @@ class _ExchangePageState extends State<ExchangePage> {
       setState(() {
         _isLoading = false;
       });
-      print(response.statusCode);
+
       if (response.statusCode == 201) {
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
@@ -164,8 +162,15 @@ class _ExchangePageState extends State<ExchangePage> {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final isKeyboardOpen = mediaQuery.viewInsets.bottom != 0; // Check if keyboard is open
-
-    return Scaffold(
+    return Theme(
+      data: Theme.of(context).copyWith(
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: Color(0xFF003366),
+          selectionColor: Color(0xFF003366).withOpacity(0.5),
+          selectionHandleColor: Color(0xFF003366),
+        ),
+      ),
+    child: Scaffold(
       body: Stack(
         children: [
           Container(
@@ -210,30 +215,9 @@ class _ExchangePageState extends State<ExchangePage> {
               ],
             ),
           ),
-          // Show Bottom Navigation Bar only when keyboard is closed
-          if (!isKeyboardOpen)
-            Align(
-              alignment: Alignment.bottomCenter,
-              child: BottomNavigationBar(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                selectedItemColor: Colors.black,
-                unselectedItemColor: Colors.black,
-                items: const [
-                  BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-                  BottomNavigationBarItem(icon: Icon(Icons.receipt), label: 'Transactions'),
-                  BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: 'Reports'),
-                  BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
-                ],
-                currentIndex: 0,
-                onTap: (index) {
-                  // Handle navigation based on the selected index
-                },
-                type: BottomNavigationBarType.fixed,
-              ),
-            ),
         ],
       ),
+    ),
     );
   }
 
@@ -369,5 +353,6 @@ class _ExchangePageState extends State<ExchangePage> {
         ),
       ],
     );
+
   }
 }
