@@ -59,8 +59,20 @@ class _AddIncomePageState extends State<AddIncomePage> {
       );
       Navigator.pop(context);
     } else {
+      // Parse the response body for error messages
+      final responseData = jsonDecode(response.body);
+      String errorMessage = responseData['message'] ?? 'Failed to add income. Please try again.';
+
+      // Extract error details if available
+      String errorDetails = '';
+      if (responseData.containsKey('errors')) {
+        responseData['errors'].forEach((key, value) {
+          errorDetails += '$key: ${value.join(', ')}\n'; // Join multiple error messages
+        });
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add income. Please try again.')),
+        SnackBar(content: Text('$errorMessage\n$errorDetails')),
       );
     }
   }
