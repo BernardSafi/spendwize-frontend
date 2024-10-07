@@ -10,7 +10,6 @@ class AddExpensePage extends StatefulWidget {
   _AddExpensePageState createState() => _AddExpensePageState();
 }
 
-
 class _AddExpensePageState extends State<AddExpensePage> {
   final storage = FlutterSecureStorage();
   final _formKey = GlobalKey<FormState>();
@@ -21,7 +20,20 @@ class _AddExpensePageState extends State<AddExpensePage> {
   DateTime? _selectedDate; // Variable to store the selected date
   bool _isLoading = false;
 
-  final List<String> expenseTypes = ['Groceries', 'Rent', 'Bills', 'Transportation', 'Healthcare', 'Entertainment', 'Clothing', 'Education', 'Travel', 'Personal Care', 'Insurance', 'Other'];
+  final List<String> expenseTypes = [
+    'Groceries',
+    'Rent',
+    'Bills',
+    'Transportation',
+    'Healthcare',
+    'Entertainment',
+    'Clothing',
+    'Education',
+    'Travel',
+    'Personal Care',
+    'Insurance',
+    'Other'
+  ];
 
   Future<String?> getToken() async {
     return await storage.read(key: 'token');
@@ -51,21 +63,20 @@ class _AddExpensePageState extends State<AddExpensePage> {
       setState(() {
         _isLoading = false;
       });
+
       if (response.statusCode == 201) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Expense added successfully!')),
         );
         Navigator.pop(context);
       } else {
-        // Parse the response body for error messages
         final responseData = jsonDecode(response.body);
         String errorMessage = responseData['message'] ?? 'Failed to add Expense. Please try again.';
 
-        // Extract error details if available
         String errorDetails = '';
         if (responseData.containsKey('errors')) {
           responseData['errors'].forEach((key, value) {
-            errorDetails += '$key: ${value.join(', ')}\n'; // Join multiple error messages
+            errorDetails += '$key: ${value.join(', ')}\n';
           });
         }
 
@@ -102,7 +113,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
       child: Scaffold(
         body: Stack(
           children: [
-            // Background gradient
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -112,25 +122,24 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 ),
               ),
             ),
-            Column(
-              children: [
-                // AppBar
-                AppBar(
-                  title: Text(
-                    'SpendWize',
-                    style: TextStyle(color: Colors.white),
+            SingleChildScrollView( // Wrap with SingleChildScrollView
+              child: Column(
+                children: [
+                  AppBar(
+                    title: Text(
+                      'SpendWize',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    leading: IconButton(
+                      icon: Icon(Icons.arrow_back, color: Colors.white),
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                    ),
                   ),
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  leading: IconButton(
-                    icon: Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
+                  Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Form(
                       key: _formKey,
@@ -259,8 +268,8 @@ class _AddExpensePageState extends State<AddExpensePage> {
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ),
