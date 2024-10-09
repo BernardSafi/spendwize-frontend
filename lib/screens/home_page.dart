@@ -46,7 +46,7 @@ class _HomePageState extends State<HomePage> {
     String? token = await storage.read(key: 'token');
 
     final response = await http.get(
-      Uri.parse(savingsBalanceEndpoint), // Replace with your actual savings balance API endpoint
+      Uri.parse(savingsBalanceEndpoint),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -95,7 +95,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchUserName() async {
     String? token = await storage.read(key: 'token');
     final response = await http.get(
-      Uri.parse(usernameEndpoint), // Replace with your actual API URL
+      Uri.parse(usernameEndpoint),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -216,7 +216,7 @@ class _HomePageState extends State<HomePage> {
               currentIndex: 0,
               onTap: (index) async {
                 if (index == 0) {
-                  // Stay on Home (you can keep it as is or remove if already on Home)
+                  // Stay on Home
                 } else if (index == 1) {
                   // Navigate to Transactions and wait for the result
                   await Navigator.push(
@@ -227,13 +227,13 @@ class _HomePageState extends State<HomePage> {
                   // Fetch the balances again after returning from the TransactionPage
                   await fetchBalances();
                 } else if (index == 2) {
-                  // Navigate to Reports (implement your logic here)
+                  // Navigate to Reports
                   await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => ReportPage()),
                   );
                 } else if (index == 3) {
-                  // Navigate to About (implement your logic here)
+                  // Navigate to About
                   await Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => AboutPage()),

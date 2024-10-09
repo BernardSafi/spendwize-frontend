@@ -50,7 +50,7 @@ class _TransferPageState extends State<AddTransferPage> {
     String? token = await storage.read(key: 'token');
 
     final response = await http.get(
-      Uri.parse(savingsBalanceEndpoint), // Replace with your actual savings balance API endpoint
+      Uri.parse(savingsBalanceEndpoint),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -113,13 +113,13 @@ class _TransferPageState extends State<AddTransferPage> {
 
     // Determine the transfer endpoint based on the action and currency
     if (action == 'Transfer to Savings' && currency == 'USD') {
-      transferEndpoint = walletToSavingsUSD; // Replace with your actual endpoint
+      transferEndpoint = walletToSavingsUSD;
     } else if (action == 'Transfer to Wallet' && currency == 'USD') {
-      transferEndpoint = savingsToWalletUSD; // Replace with your actual endpoint
+      transferEndpoint = savingsToWalletUSD;
     } else if (action == 'Transfer to Savings' && currency == 'LBP') {
-      transferEndpoint = walletToSavingsLBP; // Replace with your actual endpoint
+      transferEndpoint = walletToSavingsLBP;
     } else if (action == 'Transfer to Wallet' && currency == 'LBP') {
-      transferEndpoint = savingsToWalletLBP; // Replace with your actual endpoint
+      transferEndpoint = savingsToWalletLBP;
     } else {
       // Handle invalid action/currency combination
       ScaffoldMessenger.of(context).showSnackBar(
@@ -188,8 +188,6 @@ class _TransferPageState extends State<AddTransferPage> {
     final isPortrait = mediaQuery.orientation == Orientation.portrait;
     final screenWidth = mediaQuery.size.width;
 
-    // Check if the keyboard is open
-    bool isKeyboardOpen = mediaQuery.viewInsets.bottom > 0;
 
     return Theme(
       data: Theme.of(context).copyWith(

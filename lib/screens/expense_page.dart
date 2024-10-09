@@ -3,7 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'dart:convert';
-import 'package:spendwize_frontend/constants.dart'; // Your API endpoints/constants file
+import 'package:spendwize_frontend/constants.dart';
 
 class AddExpensePage extends StatefulWidget {
   @override

@@ -27,7 +27,7 @@ class RegisterScreen extends StatelessWidget {
       String errorMessage;
       try {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
-        errorMessage = responseData['error']; // Adjust the key based on your API response structure
+        errorMessage = responseData['error'];
       } catch (e) {
         errorMessage = 'Registration failed. Please try again.'; // Fallback if JSON decoding fails
       }

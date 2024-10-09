@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart'; // Add this package to handle links
+import 'package:url_launcher/url_launcher.dart'; // for links to open mail
 
 class AboutPage extends StatelessWidget {
   @override
@@ -119,9 +119,12 @@ class AboutPage extends StatelessWidget {
                       children: [
                         Icon(Icons.music_note, color: Colors.black), // Placeholder for TikTok Icon
                         SizedBox(width: 8), // Spacing between icon and text
-                        Text(
-                          'Follow us on TikTok: @codewizard91',
-                          style: TextStyle(fontSize: 16, color: Colors.black),
+                        Flexible( // Make text wrap
+                          child: Text(
+                            'Follow us on TikTok: @codewizard91',
+                            style: TextStyle(fontSize: 16, color: Colors.black),
+                            overflow: TextOverflow.clip, // Handle overflow
+                          ),
                         ),
                       ],
                     ),

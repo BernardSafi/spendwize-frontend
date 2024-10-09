@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'register_screen.dart'; // Import the RegisterScreen
-import 'home_page.dart'; // Import your HomeScreen
+import 'register_screen.dart';
+import 'home_page.dart';
 import 'dart:convert';
 import 'package:spendwize_frontend/constants.dart';
 class LoginScreen extends StatelessWidget {
@@ -19,7 +19,7 @@ class LoginScreen extends StatelessWidget {
 
     if (response.statusCode == 200) {
       final jsonResponse = json.decode(response.body); // Decode the JSON response
-      final token = jsonResponse['token']; // Adjust according to your response structure
+      final token = jsonResponse['token'];
       await storage.write(key: 'token', value: token); // Save the token
 
       // Navigate to the HomeScreen
@@ -31,7 +31,7 @@ class LoginScreen extends StatelessWidget {
       String errorMessage;
       try {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
-        errorMessage = responseData['error']; // Adjust the key based on your API response structure
+        errorMessage = responseData['error'];
       } catch (e) {
         errorMessage = 'Registration failed. Please try again.'; // Fallback if JSON decoding fails
       }

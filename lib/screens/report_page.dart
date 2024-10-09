@@ -315,53 +315,57 @@ class _ReportPageState extends State<ReportPage> {
                   AppBar(
                     title: const Text(
                       "Reports",
-                      style: TextStyle(color: Colors.white), // Change AppBar text color to white
+                      style: TextStyle(color: Colors.white),
                     ),
-                    backgroundColor: Colors.transparent, // Make AppBar transparent
-                    elevation: 0, // Remove shadow
-                    iconTheme: const IconThemeData(color: Colors.white), // Change back arrow color to white
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    iconTheme: const IconThemeData(color: Colors.white),
                   ),
-                   isLoading
-                    ? Center(
-                        child: CircularProgressIndicator(
-                        color: Colors.white, // Change loading indicator color to white
-                        ),)
+                  isLoading
+                      ? Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                    ),
+                  )
                       : Column(
                     children: [
                       // Date range selection and currency dropdown in one row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () => _selectDateRange(context),
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.black, // Set the text color to black
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () => _selectDateRange(context),
+                              style: ElevatedButton.styleFrom(
+                                foregroundColor: Colors.black,
+                              ),
+                              child: const Text("Select Date Range"),
                             ),
-                            child: const Text("Select Date Range"),
-                          ),
-
-                          Row(
-                            children: [
-                              const Text(
-                                "Select Currency:",
-                                style: TextStyle(color: Colors.white), // Change text color to white
-                              ),
-                              const SizedBox(width: 10),
-                              DropdownButton<String>(
-                                value: selectedCurrency,
-                                items: const [
-                                  DropdownMenuItem(value: 'USD', child: Text('USD')),
-                                  DropdownMenuItem(value: 'LBP', child: Text('LBP')),
-                                ],
-                                onChanged: (String? newValue) {
-                                  setState(() {
-                                    selectedCurrency = newValue!;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
+                            const SizedBox(width: 16), // Added space between elements
+                            Row(
+                              children: [
+                                const Text(
+                                  "Select Currency:",
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                const SizedBox(width: 10),
+                                DropdownButton<String>(
+                                  value: selectedCurrency,
+                                  items: const [
+                                    DropdownMenuItem(value: 'USD', child: Text('USD')),
+                                    DropdownMenuItem(value: 'LBP', child: Text('LBP')),
+                                  ],
+                                  onChanged: (String? newValue) {
+                                    setState(() {
+                                      selectedCurrency = newValue!;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 10),
 
@@ -371,12 +375,12 @@ class _ReportPageState extends State<ReportPage> {
                         children: [
                           Text(
                             'Start Date: ${startDate != null ? dateFormat.format(startDate!) : 'Not selected'}',
-                            style: const TextStyle(color: Colors.white), // Change text color to white
+                            style: const TextStyle(color: Colors.white),
                           ),
                           const SizedBox(width: 20),
                           Text(
                             'End Date: ${endDate != null ? dateFormat.format(endDate!) : 'Not selected'}',
-                            style: const TextStyle(color: Colors.white), // Change text color to white
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ],
                       ),
@@ -385,7 +389,7 @@ class _ReportPageState extends State<ReportPage> {
                       // Income Pie Chart with Legend
                       const Text(
                         "Income Distribution",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white), // Change text color to white
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       Container(
                         decoration: BoxDecoration(
@@ -422,7 +426,7 @@ class _ReportPageState extends State<ReportPage> {
                       const SizedBox(height: 20),
                       const Text(
                         "Expense Distribution",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white), // Change text color to white
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       Container(
                         decoration: BoxDecoration(
@@ -459,10 +463,11 @@ class _ReportPageState extends State<ReportPage> {
 
                       // Year selector for bar chart
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
                             "Select Year:",
-                            style: TextStyle(color: Colors.white), // Change text color to white
+                            style: TextStyle(color: Colors.white),
                           ),
                           const SizedBox(width: 10),
                           DropdownButton<String>(
@@ -471,7 +476,7 @@ class _ReportPageState extends State<ReportPage> {
                               final year = DateTime.now().year - index;
                               return DropdownMenuItem<String>(
                                 value: year.toString(),
-                                child: Text(year.toString(), style: const TextStyle(color: Colors.black)), // Change text color to white
+                                child: Text(year.toString(), style: const TextStyle(color: Colors.black)),
                               );
                             }),
                             onChanged: (String? newValue) {
@@ -487,13 +492,13 @@ class _ReportPageState extends State<ReportPage> {
                       // Monthly Income and Expenses header
                       const Text(
                         "Monthly Income and Expenses",
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white), // Change text color to white
+                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Text(
                           "Selected Year: $selectedYear",
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.white), // Change text color to white
+                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500, color: Colors.white),
                         ),
                       ),
                       Container(
@@ -524,29 +529,29 @@ class _ReportPageState extends State<ReportPage> {
                                     getTitlesWidget: (value, meta) {
                                       switch (value.toInt()) {
                                         case 0:
-                                          return const Text('Jan', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Jan', style: TextStyle(color: Colors.black));
                                         case 1:
-                                          return const Text('Feb', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Feb', style: TextStyle(color: Colors.black));
                                         case 2:
-                                          return const Text('Mar', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Mar', style: TextStyle(color: Colors.black));
                                         case 3:
-                                          return const Text('Apr', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Apr', style: TextStyle(color: Colors.black));
                                         case 4:
-                                          return const Text('May', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('May', style: TextStyle(color: Colors.black));
                                         case 5:
-                                          return const Text('Jun', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Jun', style: TextStyle(color: Colors.black));
                                         case 6:
-                                          return const Text('Jul', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Jul', style: TextStyle(color: Colors.black));
                                         case 7:
-                                          return const Text('Aug', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Aug', style: TextStyle(color: Colors.black));
                                         case 8:
-                                          return const Text('Sep', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Sep', style: TextStyle(color: Colors.black));
                                         case 9:
-                                          return const Text('Oct', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Oct', style: TextStyle(color: Colors.black));
                                         case 10:
-                                          return const Text('Nov', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Nov', style: TextStyle(color: Colors.black));
                                         case 11:
-                                          return const Text('Dec', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Dec', style: TextStyle(color: Colors.black));
                                         default:
                                           return const Text('');
                                       }
@@ -590,29 +595,29 @@ class _ReportPageState extends State<ReportPage> {
                                     getTitlesWidget: (value, meta) {
                                       switch (value.toInt()) {
                                         case 0:
-                                          return const Text('Jan', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Jan', style: TextStyle(color: Colors.black));
                                         case 1:
-                                          return const Text('Feb', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Feb', style: TextStyle(color: Colors.black));
                                         case 2:
-                                          return const Text('Mar', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Mar', style: TextStyle(color: Colors.black));
                                         case 3:
-                                          return const Text('Apr', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Apr', style: TextStyle(color: Colors.black));
                                         case 4:
-                                          return const Text('May', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('May', style: TextStyle(color: Colors.black));
                                         case 5:
-                                          return const Text('Jun', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Jun', style: TextStyle(color: Colors.black));
                                         case 6:
-                                          return const Text('Jul', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Jul', style: TextStyle(color: Colors.black));
                                         case 7:
-                                          return const Text('Aug', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Aug', style: TextStyle(color: Colors.black));
                                         case 8:
-                                          return const Text('Sep', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Sep', style: TextStyle(color: Colors.black));
                                         case 9:
-                                          return const Text('Oct', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Oct', style: TextStyle(color: Colors.black));
                                         case 10:
-                                          return const Text('Nov', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Nov', style: TextStyle(color: Colors.black));
                                         case 11:
-                                          return const Text('Dec', style: TextStyle(color: Colors.black)); // Bar chart label color
+                                          return const Text('Dec', style: TextStyle(color: Colors.black));
                                         default:
                                           return const Text('');
                                       }
@@ -629,7 +634,6 @@ class _ReportPageState extends State<ReportPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
                 ],
               ),
             ),
@@ -638,6 +642,7 @@ class _ReportPageState extends State<ReportPage> {
       ),
     );
   }
+
 
 
 

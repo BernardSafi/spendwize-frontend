@@ -3,7 +3,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart'; // To format the selected date
-import 'package:spendwize_frontend/constants.dart'; // Your API endpoints/constants file
+import 'package:spendwize_frontend/constants.dart';
 
 class AddIncomePage extends StatefulWidget {
 

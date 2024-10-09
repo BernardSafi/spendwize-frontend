@@ -15,7 +15,7 @@ class TransactionDetailPage extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [Color(0xFF003366), Color(0xFF008080), Color(0xFF87CEEB)], // Same gradient as HomePage
+                colors: [Color(0xFF003366), Color(0xFF008080), Color(0xFF87CEEB)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -34,8 +34,9 @@ class TransactionDetailPage extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              // Wrapping content in SingleChildScrollView to prevent overflow
               Expanded(
-                child: Padding(
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.all(16.0),
                   child: _buildTransactionDetails(),
                 ),

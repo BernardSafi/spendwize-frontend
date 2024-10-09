@@ -45,7 +45,7 @@ class _ExchangePageState extends State<ExchangePage> {
     String? token = await storage.read(key: 'token');
 
     final response = await http.get(
-      Uri.parse(walletBalanceEndpoint), // Replace with your actual endpoint
+      Uri.parse(walletBalanceEndpoint),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -111,12 +111,10 @@ class _ExchangePageState extends State<ExchangePage> {
       toAccount = 'wallet_usd';
     }
 
-
     try {
-
       // Perform the API request
       final response = await http.post(
-        Uri.parse(currencyExchangeEndpoint), // Replace with your actual exchange endpoint
+        Uri.parse(currencyExchangeEndpoint),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -141,9 +139,21 @@ class _ExchangePageState extends State<ExchangePage> {
         );
         fetchBalances(); // Update balances after exchange
       } else {
-        // Show failure message
+        final responseData = jsonDecode(response.body);
+        String errorMessage = responseData['message'] ?? 'Failed to add Exchange. Please try again.';
+
+        // Check if there are validation errors
+        if (responseData.containsKey('errors')) {
+          String errorDetails = '';
+          responseData['errors'].forEach((key, value) {
+            errorDetails += '$key: ${value.join(', ')}\n';
+          });
+          // Display validation errors
+          errorMessage += '\n\nValidation Errors:\n$errorDetails';
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Exchange failed. Please try again.')),
+          SnackBar(content: Text(errorMessage)),
         );
       }
     } catch (e) {
@@ -156,6 +166,7 @@ class _ExchangePageState extends State<ExchangePage> {
       );
     }
   }
+
 
 
   @override
